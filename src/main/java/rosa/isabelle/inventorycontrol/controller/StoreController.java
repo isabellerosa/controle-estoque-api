@@ -1,6 +1,7 @@
 package rosa.isabelle.inventorycontrol.controller;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,9 @@ import rosa.isabelle.inventorycontrol.exception.CustomException;
 import rosa.isabelle.inventorycontrol.model.request.StoreRequestModel;
 import rosa.isabelle.inventorycontrol.model.response.StoreResponseModel;
 import rosa.isabelle.inventorycontrol.service.StoreService;
+
+import java.lang.reflect.Type;
+import java.util.List;
 
 @RestController
 @RequestMapping("{ownerId}/store")
@@ -48,6 +52,24 @@ public class StoreController {
         }catch (CustomException customException){
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
+        }catch (Exception exception){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<StoreResponseModel> getStores(@PathVariable("ownerId") String ownerId){
+        try {
+            ModelMapper mapper = new ModelMapper();
+
+            List<StoreDTO> ownerStores = storeService.getStores(ownerId);
+
+            Type type = new TypeToken<List<StoreResponseModel>>() {
+            }.getType();
+
+            List<StoreResponseModel> returnedStores = mapper.map(ownerStores, type);
+
+            return returnedStores;
         }catch (Exception exception){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }

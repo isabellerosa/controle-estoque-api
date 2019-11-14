@@ -1,6 +1,7 @@
 package rosa.isabelle.inventorycontrol.service;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import rosa.isabelle.inventorycontrol.exception.ErrorMessage;
 import rosa.isabelle.inventorycontrol.model.entity.StoreEntity;
 import rosa.isabelle.inventorycontrol.repository.StoreRepository;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 @Service
@@ -67,7 +69,14 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    public List<StoreDTO> getStores() {
-        return null;
+    public List<StoreDTO> getStores(String ownerId) {
+        ModelMapper modelMapper = new ModelMapper();
+        List<StoreEntity> stores = storeRepository.findByOwnerId(ownerId);
+
+        Type typeToken = new TypeToken<List<StoreDTO>>(){}.getType();
+
+        List<StoreDTO> returnedStores = modelMapper.map(stores, typeToken);
+
+        return returnedStores;
     }
 }

@@ -8,5 +8,5 @@ public interface StoreService {
     StoreDTO createStore(StoreDTO storeDTO);
     StoreDTO editStore(StoreDTO storeDTO);
     StoreDTO deleteStore(StoreDTO storeDTO);
-    List<StoreDTO> getStores();
+    List<StoreDTO> getStores(String ownerId);
 }
