@@ -100,5 +100,33 @@ public class StoreController {
         }
     }
 
+    @PutMapping(path = "/{storeId}",
+                consumes = MediaType.APPLICATION_JSON_VALUE,
+                produces = MediaType.APPLICATION_JSON_VALUE)
+    public StoreResponseModel editStore(@RequestBody StoreRequestModel storeRequest,
+                                        @PathVariable("ownerId") String ownerId,
+                                        @PathVariable("storeId") String storeId){
+        try {
+            LOGGER.debug("Received payload: " + storeRequest);
 
+            ModelMapper mapper = new ModelMapper();
+
+            StoreDTO requestDTO = mapper.map(storeRequest, StoreDTO.class);
+            requestDTO.setPublicId(storeId);
+            requestDTO.setOwnerId(ownerId);
+
+            StoreDTO editedStore = storeService.editStore(requestDTO);
+            LOGGER.debug("Modified store: " + editedStore);
+
+            StoreResponseModel responseModel = mapper.map(editedStore, StoreResponseModel.class);
+
+            return responseModel;
+
+        }catch (CustomException customException){
+            HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
+            throw new ResponseStatusException(code, customException.getMessage());
+        }catch (Exception exception){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

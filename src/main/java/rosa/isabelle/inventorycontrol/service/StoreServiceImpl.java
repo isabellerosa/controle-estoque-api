@@ -60,7 +60,22 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreDTO editStore(StoreDTO storeDTO) {
-        return null;
+        StoreEntity originalStore = findByPublicId(storeDTO.getPublicId(), storeDTO.getOwnerId());
+
+        if(originalStore == null)
+            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+
+        ModelMapper mapper = new ModelMapper();
+
+        StoreEntity request = mapper.map(originalStore, StoreEntity.class);
+        request.setName(storeDTO.getName());
+
+        StoreEntity modified = storeRepository.save(request);
+
+        StoreDTO modifiedDTO = mapper.map(modified, StoreDTO.class);
+
+        return modifiedDTO;
     }
 
     @Override
