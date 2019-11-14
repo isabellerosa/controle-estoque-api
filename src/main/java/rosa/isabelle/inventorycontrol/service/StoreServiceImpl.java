@@ -65,7 +65,18 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreDTO deleteStore(StoreDTO storeDTO) {
-        return null;
+        StoreEntity request = findByPublicId(storeDTO.getPublicId(), storeDTO.getOwnerId());
+
+        if(request == null)
+            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+
+        storeRepository.delete(request);
+
+        ModelMapper mapper = new ModelMapper();
+        StoreDTO deleted = mapper.map(request, StoreDTO.class);
+
+        return deleted;
     }
 
     @Override

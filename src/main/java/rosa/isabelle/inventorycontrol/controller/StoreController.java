@@ -74,4 +74,31 @@ public class StoreController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @DeleteMapping(path = "/{storeId}",
+                   produces = MediaType.APPLICATION_JSON_VALUE)
+    public StoreResponseModel deleteStore(@PathVariable("ownerId") String ownerId,
+                                          @PathVariable("storeId") String storeId) {
+        try {
+            ModelMapper mapper = new ModelMapper();
+
+            StoreDTO storeDTO = new StoreDTO();
+            storeDTO.setPublicId(storeId);
+            storeDTO.setOwnerId(ownerId);
+
+            StoreDTO deletedStoreDTO = storeService.deleteStore(storeDTO);
+
+            StoreResponseModel deletedStore = mapper.map(deletedStoreDTO, StoreResponseModel.class);
+
+            return deletedStore;
+
+        }catch(CustomException customException){
+            HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
+            throw new ResponseStatusException(code, customException.getMessage());
+        }catch (Exception exception){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 }

@@ -11,4 +11,5 @@ public interface StoreRepository extends CrudRepository<StoreEntity, Long> {
     StoreEntity save(StoreEntity store);
     StoreEntity findByPublicIdAndOwnerId(String publicId, String ownerId);
     List<StoreEntity> findByOwnerId(String ownerId);
+    void delete(StoreEntity store);
 }
