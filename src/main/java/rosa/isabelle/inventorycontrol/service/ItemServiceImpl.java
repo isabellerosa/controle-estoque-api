@@ -1,7 +1,11 @@
 package rosa.isabelle.inventorycontrol.service;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import rosa.isabelle.inventorycontrol.dto.ItemDTO;
 import rosa.isabelle.inventorycontrol.exception.CustomException;
@@ -10,6 +14,7 @@ import rosa.isabelle.inventorycontrol.model.entity.ItemEntity;
 import rosa.isabelle.inventorycontrol.repository.ItemRepository;
 import rosa.isabelle.inventorycontrol.utils.IdBuilder;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 @Service
@@ -70,7 +75,21 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDTO> getItems(String ownerId) {
-        return null;
+    public List<ItemDTO> getItems(String sellerId, int page, int size) {
+        ModelMapper modelMapper = new ModelMapper();
+        final int DEFAULT_SIZE = 15;
+        final int FIRST_PAGE = 0;
+
+        Pageable pageable = PageRequest.of(
+                Math.max(page, FIRST_PAGE),
+                size > 0 ? size : DEFAULT_SIZE);
+
+        Page<ItemEntity> items = itemRepository.findBySellerId(sellerId, pageable);
+
+        Type typeToken = new TypeToken<List<ItemDTO>>(){}.getType();
+
+        List<ItemDTO> returnedItems = modelMapper.map(items.getContent(), typeToken);
+
+        return returnedItems;
     }
 }

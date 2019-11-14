@@ -1,6 +1,7 @@
 package rosa.isabelle.inventorycontrol.controller;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,6 +12,9 @@ import rosa.isabelle.inventorycontrol.exception.CustomException;
 import rosa.isabelle.inventorycontrol.model.request.ItemRequestModel;
 import rosa.isabelle.inventorycontrol.model.response.ItemResponseModel;
 import rosa.isabelle.inventorycontrol.service.ItemService;
+
+import java.lang.reflect.Type;
+import java.util.List;
 
 @RestController
 @RequestMapping("{sellerId}/item")
@@ -43,6 +47,25 @@ public class ItemController {
             customException.printStackTrace();
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
+        }catch (Exception exception){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<ItemResponseModel> getItems(@PathVariable("sellerId") String sellerId,
+                                            @RequestParam(name = "page", defaultValue = "1") int page,
+                                            @RequestParam(name = "size", defaultValue = "15") int size){
+        try {
+            ModelMapper mapper = new ModelMapper();
+
+            List<ItemDTO> items = itemService.getItems(sellerId, page-1, size);
+
+            Type type = new TypeToken<List<ItemResponseModel>>() {}.getType();
+
+            List<ItemResponseModel> returnedItems = mapper.map(items, type);
+
+            return returnedItems;
         }catch (Exception exception){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
