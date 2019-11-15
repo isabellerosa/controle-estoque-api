@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping("{ownerId}/store")
 public class StoreController {
     private StoreService storeService;
-    private static final Logger LOGGER = LoggerFactory.getLogger(RestController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StoreController.class);
 
     @Autowired
     public StoreController(StoreService storeService) {
@@ -34,31 +34,38 @@ public class StoreController {
     @ResponseStatus(code = HttpStatus.CREATED)
     public StoreResponseModel createStore(@RequestBody StoreRequestModel newStoreRequest,
                                    @PathVariable("ownerId") String ownerId){
-        try {
-            LOGGER.debug("Received store: " + newStoreRequest);
+        LOGGER.debug("Starting createStore with store name: {} and ownerId: {}", newStoreRequest.getName(), ownerId);
 
+        try {
             ModelMapper mapper = new ModelMapper();
 
             StoreDTO newStoreDTO = mapper.map(newStoreRequest, StoreDTO.class);
             newStoreDTO.setOwnerId(ownerId);
 
             StoreDTO createdStoreDTO = storeService.createStore(newStoreDTO);
-            LOGGER.debug("Created store: " + createdStoreDTO);
 
             StoreResponseModel createdStoreResponse = mapper.map(createdStoreDTO, StoreResponseModel.class);
 
             return createdStoreResponse;
 
         }catch (CustomException customException){
+            LOGGER.error("An exception occurred at createStore with store name: {} and ownerId: {}",
+                    newStoreRequest.getName(), ownerId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         }catch (Exception exception){
+            LOGGER.error("An exception occurred at createStore with store name: {} and ownerId: {}",
+                    newStoreRequest.getName(), ownerId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<StoreResponseModel> findStores(@PathVariable("ownerId") String ownerId){
+        LOGGER.debug("Starting findStores with ownerId: {}", ownerId);
+
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -70,6 +77,8 @@ public class StoreController {
 
             return storeListResponse;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred at findStores with ownerId: {}", ownerId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -78,6 +87,8 @@ public class StoreController {
                    produces = MediaType.APPLICATION_JSON_VALUE)
     public StoreResponseModel deleteStore(@PathVariable("ownerId") String ownerId,
                                           @PathVariable("storeId") String storeId) {
+        LOGGER.debug("Starting deleteStore with storeId: {}", storeId);
+
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -92,9 +103,13 @@ public class StoreController {
             return deletedStoreResponse;
 
         }catch(CustomException customException){
+            LOGGER.error("An exception occurred at deleteStore with storeId: {}", storeId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         }catch (Exception exception){
+            LOGGER.error("An exception occurred at deleteStore with storeId: {}", storeId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -105,9 +120,9 @@ public class StoreController {
     public StoreResponseModel updateStore(@RequestBody StoreRequestModel editedStoreRequest,
                                           @PathVariable("ownerId") String ownerId,
                                           @PathVariable("storeId") String storeId){
-        try {
-            LOGGER.debug("Received payload: " + editedStoreRequest);
+        LOGGER.debug("Starting updateStore with ownerId: {} and storeId: {}", ownerId, storeId);
 
+        try {
             ModelMapper mapper = new ModelMapper();
 
             StoreDTO editedStoreDTO = mapper.map(editedStoreRequest, StoreDTO.class);
@@ -122,9 +137,13 @@ public class StoreController {
             return modifiedStoreResponse;
 
         }catch (CustomException customException){
+            LOGGER.error("An exception occurred at updateStore with ownerId: {} and storeId: {}", ownerId, storeId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         }catch (Exception exception){
+            LOGGER.error("An exception occurred at updateStore with ownerId: {} and storeId: {}", ownerId, storeId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

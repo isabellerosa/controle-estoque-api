@@ -2,6 +2,8 @@ package rosa.isabelle.inventorycontrol.controller;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +23,8 @@ import java.util.List;
 public class ItemController {
 
     private ItemService itemService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ItemController.class);
+
 
     @Autowired
     public ItemController(ItemService itemService) {
@@ -31,6 +35,8 @@ public class ItemController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ItemResponseModel createItem(@RequestBody ItemRequestModel itemRequest,
                                         @PathVariable("sellerId") String sellerId) {
+        LOGGER.debug("Starting createItem with item name: {} and sellerId: {}", itemRequest.getName(), sellerId);
+
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -44,10 +50,15 @@ public class ItemController {
             return createdItemResponse;
 
         } catch (CustomException customException) {
-            customException.printStackTrace();
+            LOGGER.error("An exception occurred at createItem with item name: {} and sellerId: {}",
+                    itemRequest.getName(), sellerId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred at createItem with item name: {} and sellerId: {}",
+                    itemRequest.getName(), sellerId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -56,6 +67,8 @@ public class ItemController {
     public List<ItemResponseModel> findItems(@PathVariable("sellerId") String sellerId,
                                              @RequestParam(name = "page", defaultValue = "1") int page,
                                              @RequestParam(name = "size", defaultValue = "15") int size) {
+        LOGGER.debug("Starting findItems with sellerId: {}", sellerId);
+
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -68,9 +81,13 @@ public class ItemController {
 
             return itemsPageResponse;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred at findItems with sellerId: {}", sellerId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred at findItems with sellerId: {}", sellerId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -81,6 +98,8 @@ public class ItemController {
     public ItemResponseModel updateItem(@RequestBody ItemRequestModel editedItemRequest,
                                         @PathVariable("sellerId") String sellerId,
                                         @PathVariable("itemId") String itemId) {
+        LOGGER.debug("Starting updateItem with sellerId: {} and itemId: {}", sellerId, itemId);
+
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -94,9 +113,13 @@ public class ItemController {
 
             return modifiedItemResponse;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred at updateItem with sellerId: {} and itemId: {}", sellerId, itemId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred at updateItem with sellerId: {} and itemId: {}", sellerId, itemId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -105,6 +128,8 @@ public class ItemController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ItemResponseModel deleteItem(@PathVariable("sellerId") String sellerId,
                                         @PathVariable("itemId") String itemId) {
+        LOGGER.debug("Starting deleteItem with sellerId: {} and itemId: {}", sellerId, itemId);
+
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -118,9 +143,13 @@ public class ItemController {
 
             return deletedItemResponse;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred at deleteItem with sellerId: {} and itemId: {}", sellerId, itemId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred at deleteItem with sellerId: {} and itemId: {}", sellerId, itemId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -31,8 +31,9 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreDTO createStore(StoreDTO newStoreDTO) {
+        LOGGER.debug("Starting service createStore with publicId: {}", newStoreDTO.getPublicId());
+
         try {
-            LOGGER.debug("Received storeDTO: " + newStoreDTO);
             ModelMapper mapper = new ModelMapper();
             mapper.getConfiguration().setAmbiguityIgnored(true);
             mapper.createTypeMap(StoreDTO.class, StoreEntity.class)
@@ -41,11 +42,7 @@ public class StoreServiceImpl implements StoreService {
             StoreEntity newStore = mapper.map(newStoreDTO, StoreEntity.class);
 
             if (findByName(newStore.getName()) != null) {
-                LOGGER.debug("There is already an existent store with id " + newStore.getPublicId() +
-                        "For user " + newStore.getOwnerId());
-
-                throw new CustomException(ErrorMessage.DUPLICATED_DATA.getMessage() +
-                        ": there is already a registered store with ID " + newStoreDTO.getPublicId(),
+                throw new CustomException(ErrorMessage.DUPLICATED_DATA.getMessage(),
                         ErrorMessage.DUPLICATED_DATA.getStatusCode().value());
             }
 
@@ -53,6 +50,7 @@ public class StoreServiceImpl implements StoreService {
                 newStore.setPublicId(idBuilder.build());
             } while (findByPublicId(newStore.getPublicId()) != null);
 
+            LOGGER.debug("Trying to insert store on database");
             StoreEntity createdStore = storeRepository.save(newStore);
 
             LOGGER.debug("Saved store: " + createdStore);
@@ -61,8 +59,12 @@ public class StoreServiceImpl implements StoreService {
 
             return createdStoreDTO;
         }catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -78,6 +80,8 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreDTO editStore(StoreDTO editedStoreDTO) {
+        LOGGER.debug("Starting service editStore with publicId: {}", editedStoreDTO.getPublicId());
+
         try {
             StoreEntity originalStore = findByPublicId(editedStoreDTO.getPublicId());
 
@@ -90,14 +94,19 @@ public class StoreServiceImpl implements StoreService {
             StoreEntity editedStore = mapper.map(originalStore, StoreEntity.class);
             editedStore.setName(editedStoreDTO.getName());
 
+            LOGGER.debug("Trying to update store on database");
             StoreEntity modifiedStore = storeRepository.save(editedStore);
 
             StoreDTO modifiedStoreDTO = mapper.map(modifiedStore, StoreDTO.class);
 
             return modifiedStoreDTO;
         }catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -105,6 +114,8 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreDTO deleteStore(StoreDTO storeDTO) {
+        LOGGER.debug("Starting service deleteStore with publicId: {}", storeDTO.getPublicId());
+
         try {
             StoreEntity store = findByPublicId(storeDTO.getPublicId());
 
@@ -112,6 +123,7 @@ public class StoreServiceImpl implements StoreService {
                 throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
                         ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
 
+            LOGGER.debug("Trying to delete store from database");
             storeRepository.delete(store);
 
             ModelMapper mapper = new ModelMapper();
@@ -119,8 +131,12 @@ public class StoreServiceImpl implements StoreService {
 
             return deletedStore;
         }catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -128,8 +144,12 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public List<StoreDTO> findStores(String ownerId) {
+        LOGGER.debug("Starting service findStores with ownerId: {}", ownerId);
+
         try {
             ModelMapper modelMapper = new ModelMapper();
+
+            LOGGER.debug("Searching stores on database");
             List<StoreEntity> stores = storeRepository.findByOwnerId(ownerId);
 
             Type typeToken = new TypeToken<List<StoreDTO>>() {
@@ -139,8 +159,12 @@ public class StoreServiceImpl implements StoreService {
 
             return storesDTO;
         }catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -148,6 +172,8 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreDTO findStore(String publicId) {
+        LOGGER.debug("Starting service findStore with publicId: {}", publicId);
+
         try {
             StoreEntity store = findByPublicId(publicId);
 
@@ -162,8 +188,12 @@ public class StoreServiceImpl implements StoreService {
 
             return storeDTO;
         }catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }

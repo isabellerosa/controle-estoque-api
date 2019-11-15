@@ -1,6 +1,8 @@
 package rosa.isabelle.inventorycontrol.service;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +30,8 @@ public class StockServiceImpl implements StockService {
     private StockRepository stockRepository;
     private StoreRepository storeRepository;
     private ItemRepository itemRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(StockServiceImpl.class);
+
 
     @Autowired
     public StockServiceImpl(StockRepository stockRepository, StoreRepository storeRepository, ItemRepository itemRepository) {
@@ -38,6 +42,9 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public StockItemDTO addStockItem(StockItemDTO stockDTO) {
+        LOGGER.debug("Starting service addStockItem with name: {} and store: {}",
+                stockDTO.getItem().getName(), stockDTO.getStore().getPublicId());
+
         try {
             String storeId = stockDTO.getStore().getPublicId();
             String itemId = stockDTO.getItem().getPublicId();
@@ -62,14 +69,19 @@ public class StockServiceImpl implements StockService {
             stockEntity.setItem(itemEntity);
             stockEntity.setQuantity(stockDTO.getQuantity());
 
+            LOGGER.debug("Trying to insert stockItem on database");
             StockEntity savedEntity = stockRepository.save(stockEntity);
 
             StockItemDTO saved = mapper.map(savedEntity, StockItemDTO.class);
 
             return saved;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -89,6 +101,8 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public StockDTO getStock(String storeId, int page, int size) {
+        LOGGER.debug("Starting service getStock with storeId: {}", storeId);
+
         try {
             StoreEntity store = findStore(storeId);
 
@@ -105,6 +119,7 @@ public class StockServiceImpl implements StockService {
                     Math.max(page, FIRST_PAGE),
                     size > 0 ? size : DEFAULT_SIZE);
 
+            LOGGER.debug("Trying to find stockItems on database");
             Page<StockEntity> stocks = stockRepository.findByStore(store, pageable);
 
             List<StockItemDTO> items = new ArrayList<>();
@@ -124,8 +139,12 @@ public class StockServiceImpl implements StockService {
 
             return returnedStocks;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -133,6 +152,8 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public StockItemDTO editStockItem(String storeId, String itemId, StockItemDTO requestStockItemDTO) {
+        LOGGER.debug("Starting service editStockItem with itemId: {} and storeId: {}", itemId, storeId);
+
         try {
             StoreEntity store = findStore(storeId);
             ItemEntity item = findItem(itemId);
@@ -154,14 +175,19 @@ public class StockServiceImpl implements StockService {
             StockEntity editedStockItem = modelMapper.map(originalStockItem, StockEntity.class);
             editedStockItem.setQuantity(requestStockItemDTO.getQuantity());
 
+            LOGGER.debug("Trying to update stockItem on database");
             StockEntity updatedStockItem = stockRepository.save(editedStockItem);
 
             StockItemDTO returnStockItem = modelMapper.map(updatedStockItem, StockItemDTO.class);
 
             return returnStockItem;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -169,6 +195,8 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public StockItemDTO removeStockItem(String storeId, String itemId) {
+        LOGGER.debug("Starting service removeStockItem with storeId: {} and itemId: {}", storeId, itemId);
+
         try {
             StoreEntity storeEntity = findStore(storeId);
             ItemEntity itemEntity = findItem(itemId);
@@ -185,6 +213,7 @@ public class StockServiceImpl implements StockService {
                 throw new CustomException(error.getMessage(), error.getStatusCode().value());
             }
 
+            LOGGER.debug("Trying to delete stockItem from database");
             stockRepository.delete(item);
 
             ModelMapper mapper = new ModelMapper();
@@ -192,8 +221,12 @@ public class StockServiceImpl implements StockService {
 
             return deletedItem;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }

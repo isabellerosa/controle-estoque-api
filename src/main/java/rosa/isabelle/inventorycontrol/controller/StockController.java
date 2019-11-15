@@ -1,6 +1,8 @@
 package rosa.isabelle.inventorycontrol.controller;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +23,8 @@ import rosa.isabelle.inventorycontrol.service.StockService;
 public class StockController {
 
     private StockService stockService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(StockController.class);
+
 
     @Autowired
     public StockController(StockService stockService) {
@@ -30,6 +34,8 @@ public class StockController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     StockItemModel createStock(@RequestBody StockRequestModel newStockRequest,
                                @PathVariable("storeId") String storeId) {
+        LOGGER.debug("Starting createStock with storeId: {} and itemId: {}", storeId, newStockRequest.getItem());
+
         try {
             ModelMapper modelMapper = new ModelMapper();
 
@@ -49,9 +55,15 @@ public class StockController {
 
             return createdStockItemResponse;
         }catch (CustomException customException){
+            LOGGER.error("An exception occurred at createStock with storeId: {} and itemId: {}",
+                    storeId, newStockRequest.getItem());
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         }catch (Exception exception){
+            LOGGER.error("An exception occurred at createStock with storeId: {} and itemId: {}",
+                    storeId, newStockRequest.getItem());
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -60,6 +72,8 @@ public class StockController {
     StockResponseModel findStocks(@PathVariable("storeId") String storeId,
                                   @RequestParam(name = "page", defaultValue = "1") int page,
                                   @RequestParam(name = "size", defaultValue = "15") int size) {
+        LOGGER.debug("Starting findStocks with storeId: {}", storeId);
+
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -69,9 +83,13 @@ public class StockController {
 
             return stockPageResponse;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred at findStocks with storeId: {}", storeId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred at findStocks with storeId: {}", storeId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -80,6 +98,8 @@ public class StockController {
     StockItemModel updateStock(@RequestBody StockItemModel editedStockItemRequest,
                                @PathVariable("itemId") String itemId,
                                @PathVariable("storeId") String storeId) {
+        LOGGER.debug("Starting updateStock with itemId: {} and storeId: {}", itemId, storeId);
+
         try {
             ModelMapper mapper = new ModelMapper();
             StockItemDTO editedStockItemDTO = mapper.map(editedStockItemRequest, StockItemDTO.class);
@@ -90,15 +110,21 @@ public class StockController {
 
             return modifiedStockItemResponse;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred at updateStock with itemId: {} and storeId: {}", itemId, storeId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred at updateStock with itemId: {} and storeId: {}", itemId, storeId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping(path = "/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
     StockItemModel deleteStock(@PathVariable("itemId") String itemId, @PathVariable("storeId") String storeId) {
+        LOGGER.debug("Starting deleteStock with itemId: {} and storeId: {}", itemId, storeId);
+
         try {
             ModelMapper modelMapper = new ModelMapper();
 
@@ -108,9 +134,13 @@ public class StockController {
 
             return deletedStockItemResponse;
         } catch (CustomException customException) {
+            LOGGER.error("An exception occurred at deleteStock with itemId: {} and storeId: {}", itemId, storeId);
+
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
         } catch (Exception exception) {
+            LOGGER.error("An exception occurred at deleteStock with itemId: {} and storeId: {}", itemId, storeId);
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -2,6 +2,8 @@ package rosa.isabelle.inventorycontrol.service;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +24,7 @@ public class ItemServiceImpl implements ItemService {
 
     private ItemRepository itemRepository;
     private final IdBuilder idGenerator;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ItemServiceImpl.class);
 
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository) {
@@ -32,6 +35,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO registerItem(ItemDTO newItemDTO) {
+        LOGGER.debug("Starting service registerItem with item name: {}", newItemDTO.getName());
+
         try {
             ModelMapper mapper = new ModelMapper();
             mapper.getConfiguration().setAmbiguityIgnored(true);
@@ -51,14 +56,19 @@ public class ItemServiceImpl implements ItemService {
                 newItem.setPublicId(idGenerator.build());
             } while (!isPublicIdUnique(newItem.getPublicId()));
 
+            LOGGER.debug("Trying to insert item on database");
             ItemEntity savedItem = itemRepository.save(newItem);
 
             ItemDTO savedItemDTO = mapper.map(savedItem, ItemDTO.class);
 
             return savedItemDTO;
         }catch (CustomException customException) {
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -78,6 +88,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO editItem(ItemDTO editedItemDTO) {
+        LOGGER.debug("Starting service editItem with publicId: {}", editedItemDTO.getPublicId());
+
         try {
             ItemEntity originalItem = findByPublicId(editedItemDTO.getPublicId());
 
@@ -92,14 +104,19 @@ public class ItemServiceImpl implements ItemService {
             editedItem.setName(editedItemDTO.getName());
             editedItem.setPrice(editedItemDTO.getPrice());
 
+            LOGGER.debug("Updating item on database");
             ItemEntity modifiedItem = itemRepository.save(editedItem);
 
             ItemDTO modifiedItemDTO = mapper.map(modifiedItem, ItemDTO.class);
 
             return modifiedItemDTO;
         }catch (CustomException customException){
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -107,6 +124,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO deleteItem(String publicId) {
+        LOGGER.debug("Starting service deleteItem with publicId: {}", publicId);
+
         try {
             ItemEntity item = itemRepository.findByPublicId(publicId);
 
@@ -115,6 +134,7 @@ public class ItemServiceImpl implements ItemService {
                 throw new CustomException(error.getMessage(), error.getStatusCode().value());
             }
 
+            LOGGER.debug("Trying to delete item from database");
             itemRepository.delete(item);
 
             ModelMapper mapper = new ModelMapper();
@@ -122,8 +142,12 @@ public class ItemServiceImpl implements ItemService {
 
             return deletedItemDTO;
         }catch (CustomException customException){
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
@@ -131,6 +155,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDTO> findItems(String sellerId, int page, int size) {
+        LOGGER.debug("Starting service findItems with sellerId: {}", sellerId);
+
         try {
             ModelMapper modelMapper = new ModelMapper();
             final int DEFAULT_SIZE = 15;
@@ -140,6 +166,7 @@ public class ItemServiceImpl implements ItemService {
                     Math.max(page, FIRST_PAGE),
                     size > 0 ? size : DEFAULT_SIZE);
 
+            LOGGER.debug("Searching for items on database");
             Page<ItemEntity> itemsPage = itemRepository.findBySellerId(sellerId, pageable);
 
             Type typeToken = new TypeToken<List<ItemDTO>>() {
@@ -149,14 +176,20 @@ public class ItemServiceImpl implements ItemService {
 
             return itemsPageDTO;
         }catch (CustomException customException){
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
     }
 
     public ItemDTO findItem(String publicId) {
+        LOGGER.debug("Starting service findItem with publicId: {}", publicId);
+
         try {
             ItemEntity item = findByPublicId(publicId);
 
@@ -171,8 +204,12 @@ public class ItemServiceImpl implements ItemService {
 
             return itemDTO;
         }catch (CustomException customException){
+            LOGGER.error("An exception occurred: {}", customException.getMessage());
+
             throw customException;
         }catch (Exception exception){
+            LOGGER.error("An exception occurred: {}", exception.getMessage());
+
             ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
