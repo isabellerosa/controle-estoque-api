@@ -66,7 +66,23 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO editItem(ItemDTO itemDTO) {
-        return null;
+        ItemEntity originalItem = findByPublicId(itemDTO.getPublicId());
+
+        if(originalItem == null)
+            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+
+        ModelMapper mapper = new ModelMapper();
+
+        ItemEntity request = mapper.map(originalItem, ItemEntity.class);
+        request.setName(itemDTO.getName());
+        request.setPrice(itemDTO.getPrice());
+
+        ItemEntity modified = itemRepository.save(request);
+
+        ItemDTO modifiedDTO = mapper.map(modified, ItemDTO.class);
+
+        return modifiedDTO;
     }
 
     @Override
