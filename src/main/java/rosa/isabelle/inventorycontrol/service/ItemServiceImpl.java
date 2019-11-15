@@ -27,78 +27,85 @@ public class ItemServiceImpl implements ItemService {
     public ItemServiceImpl(ItemRepository itemRepository) {
         this.itemRepository = itemRepository;
         this.idGenerator = new IdBuilder().appendValidCharacters(IdBuilder.ALPHABET_CAPS)
-                                          .appendValidCharacters(IdBuilder.ALPHABET_NO_CAPS);
+                .appendValidCharacters(IdBuilder.ALPHABET_NO_CAPS);
     }
 
     @Override
-    public ItemDTO registerItem(ItemDTO itemDTO) {
+    public ItemDTO registerItem(ItemDTO newItemDTO) {
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setAmbiguityIgnored(true);
 
         mapper.createTypeMap(ItemDTO.class, ItemEntity.class)
                 .addMapping(ItemDTO::getPublicId, ItemEntity::setPublicId);
 
-        ItemEntity received = mapper.map(itemDTO, ItemEntity.class);
+        ItemEntity newItem = mapper.map(newItemDTO, ItemEntity.class);
 
-        if(findByName(received.getName(), received.getSellerId()) != null) {
-            throw new CustomException(ErrorMessage.DUPLICATED_DATA.getMessage(),
-                                      ErrorMessage.DUPLICATED_DATA.getStatusCode().value());
+        if (findByName(newItem.getName()) != null) {
+            ErrorMessage error = ErrorMessage.DUPLICATED_DATA;
+            throw new CustomException(error.getMessage(),
+                    error.getStatusCode().value());
         }
 
-        do{
-            received.setPublicId(idGenerator.build());
-        }while(findByPublicId(received.getPublicId()) != null);
+        do {
+            newItem.setPublicId(idGenerator.build());
+        } while (!isPublicIdUnique(newItem.getPublicId()));
 
-        ItemEntity saved = itemRepository.save(received);
+        ItemEntity savedItem = itemRepository.save(newItem);
 
-        ItemDTO savedDTO = mapper.map(saved, ItemDTO.class);
+        ItemDTO savedItemDTO = mapper.map(savedItem, ItemDTO.class);
 
-        return savedDTO;
+        return savedItemDTO;
     }
 
-    private ItemEntity findByPublicId(String publidId){
+    private ItemEntity findByPublicId(String publidId) {
         return itemRepository.findByPublicId(publidId);
     }
 
-    private ItemEntity findByName(String name, String sellerId){
-        return itemRepository.findByNameAndSellerId(name, sellerId);
+    private ItemEntity findByName(String itemName) {
+        return itemRepository.findByName(itemName);
+    }
+
+    private boolean isPublicIdUnique(String publicId) {
+        return findByPublicId(publicId) == null;
     }
 
     @Override
-    public ItemDTO editItem(ItemDTO itemDTO) {
-        ItemEntity originalItem = findByPublicId(itemDTO.getPublicId());
+    public ItemDTO editItem(ItemDTO editedItemDTO) {
+        ItemEntity originalItem = findByPublicId(editedItemDTO.getPublicId());
 
-        if(originalItem == null)
-            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
-                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+        if (originalItem == null) {
+            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
 
         ModelMapper mapper = new ModelMapper();
 
-        ItemEntity request = mapper.map(originalItem, ItemEntity.class);
-        request.setName(itemDTO.getName());
-        request.setPrice(itemDTO.getPrice());
+        ItemEntity editedItem = mapper.map(originalItem, ItemEntity.class);
+        editedItem.setName(editedItemDTO.getName());
+        editedItem.setPrice(editedItemDTO.getPrice());
 
-        ItemEntity modified = itemRepository.save(request);
+        ItemEntity modifiedItem = itemRepository.save(editedItem);
 
-        ItemDTO modifiedDTO = mapper.map(modified, ItemDTO.class);
+        ItemDTO modifiedItemDTO = mapper.map(modifiedItem, ItemDTO.class);
 
-        return modifiedDTO;
+        return modifiedItemDTO;
     }
 
     @Override
-    public ItemDTO deleteItem(ItemDTO itemDTO) {
-        ItemEntity request = findByPublicId(itemDTO.getPublicId());
+    public ItemDTO deleteItem(String publicId) {
+        ItemEntity item = itemRepository.findByPublicId(publicId);
 
-        if(request == null)
-            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
-                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+        if (item == null) {
+            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
 
-        itemRepository.delete(request);
+        itemRepository.delete(item);
 
         ModelMapper mapper = new ModelMapper();
-        ItemDTO deleted = mapper.map(request, ItemDTO.class);
+        ItemDTO deletedItemDTO = mapper.map(item, ItemDTO.class);
 
-        return deleted;
+        return deletedItemDTO;
     }
 
     @Override
@@ -111,30 +118,29 @@ public class ItemServiceImpl implements ItemService {
                 Math.max(page, FIRST_PAGE),
                 size > 0 ? size : DEFAULT_SIZE);
 
-        Page<ItemEntity> items = itemRepository.findBySellerId(sellerId, pageable);
+        Page<ItemEntity> itemsPage = itemRepository.findBySellerId(sellerId, pageable);
 
-        Type typeToken = new TypeToken<List<ItemDTO>>(){}.getType();
+        Type typeToken = new TypeToken<List<ItemDTO>>() {
+        }.getType();
 
-        List<ItemDTO> returnedItems = modelMapper.map(items.getContent(), typeToken);
+        List<ItemDTO> itemsPageDTO = modelMapper.map(itemsPage.getContent(), typeToken);
 
-        return returnedItems;
+        return itemsPageDTO;
     }
 
-    @Override
     public ItemDTO findItem(String publicId) {
-        ItemEntity itemEntity = findByPublicId(publicId);
+        ItemEntity item = findByPublicId(publicId);
 
-        if(itemEntity == null){
+        if (item == null) {
             throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
                     ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
         }
 
         ModelMapper modelMapper = new ModelMapper();
 
-        ItemDTO foundItem = modelMapper.map(itemEntity, ItemDTO.class);
+        ItemDTO itemDTO = modelMapper.map(item, ItemDTO.class);
 
-        return foundItem;
+        return itemDTO;
     }
-
 
 }

@@ -6,9 +6,9 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorMessage {
     INVALID_ENTRY("Invalid input", HttpStatus.BAD_REQUEST),
-    DUPLICATED_DATA("Duplication error", HttpStatus.CONFLICT),
-    NO_DATA_FOUND("There is no such register", HttpStatus.NOT_FOUND),
-    DEFAULT_MESSAGE("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+    DUPLICATED_DATA("Duplicated result", HttpStatus.CONFLICT),
+    NO_DATA_FOUND("No data found", HttpStatus.NOT_FOUND),
+    DEFAULT_ERROR("An error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private HttpStatus statusCode;
     private String message;

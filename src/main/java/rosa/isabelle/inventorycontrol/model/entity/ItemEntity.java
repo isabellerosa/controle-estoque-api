@@ -3,7 +3,7 @@ package rosa.isabelle.inventorycontrol.model.entity;
 import lombok.Data;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -19,17 +19,16 @@ public class ItemEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotEmpty
-    @Column(unique = true)
+    @NotBlank
     private String publicId;
 
-    @NotEmpty
+    @NotBlank
     private String name;
 
     @NotNull
     private BigDecimal price;
 
-    @NotEmpty
+    @NotBlank
     private String sellerId;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

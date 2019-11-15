@@ -7,7 +7,6 @@ import java.util.List;
 public interface ItemService {
     ItemDTO registerItem(ItemDTO itemDTO);
     ItemDTO editItem(ItemDTO itemDTO);
-    ItemDTO deleteItem(ItemDTO itemDTO);
+    ItemDTO deleteItem(String publicId);
     List<ItemDTO> findItems(String sellerId, int page, int size);
-    ItemDTO findItem(String publicId);
 }

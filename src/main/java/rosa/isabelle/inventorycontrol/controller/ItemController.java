@@ -39,9 +39,9 @@ public class ItemController {
 
             ItemDTO savedItem = itemService.registerItem(requestDTO);
 
-            ItemResponseModel responseModel = mapper.map(savedItem, ItemResponseModel.class);
+            ItemResponseModel createdItemResponse = mapper.map(savedItem, ItemResponseModel.class);
 
-            return responseModel;
+            return createdItemResponse;
 
         }catch (CustomException customException){
             customException.printStackTrace();
@@ -59,13 +59,13 @@ public class ItemController {
         try {
             ModelMapper mapper = new ModelMapper();
 
-            List<ItemDTO> items = itemService.findItems(sellerId, page-1, size);
+            List<ItemDTO> itemsPage = itemService.findItems(sellerId, page-1, size);
 
             Type type = new TypeToken<List<ItemResponseModel>>() {}.getType();
 
-            List<ItemResponseModel> returnedItems = mapper.map(items, type);
+            List<ItemResponseModel> itemsPageResponse = mapper.map(itemsPage, type);
 
-            return returnedItems;
+            return itemsPageResponse;
         }catch (Exception exception){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -86,9 +86,9 @@ public class ItemController {
 
             ItemDTO editedItem = itemService.editItem(requestDTO);
 
-            ItemResponseModel responseModel = mapper.map(editedItem, ItemResponseModel.class);
+            ItemResponseModel modifiedItemResponse = mapper.map(editedItem, ItemResponseModel.class);
 
-            return responseModel;
+            return modifiedItemResponse;
 
         }catch (CustomException customException){
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
@@ -109,11 +109,11 @@ public class ItemController {
             itemDTO.setPublicId(itemId);
             itemDTO.setSellerId(sellerId);
 
-            ItemDTO deletedItemDTO = itemService.deleteItem(itemDTO);
+            ItemDTO deletedItemDTO = itemService.deleteItem(itemId);
 
-            ItemResponseModel deletedItem = mapper.map(deletedItemDTO, ItemResponseModel.class);
+            ItemResponseModel deletedItemResponse = mapper.map(deletedItemDTO, ItemResponseModel.class);
 
-            return deletedItem;
+            return deletedItemResponse;
 
         }catch(CustomException customException){
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());

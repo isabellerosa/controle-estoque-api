@@ -10,7 +10,7 @@ import rosa.isabelle.inventorycontrol.model.entity.ItemEntity;
 public interface ItemRepository extends PagingAndSortingRepository<ItemEntity, Long> {
     ItemEntity save(ItemEntity itemEntity);
     ItemEntity findByPublicId(String publicId);
-    ItemEntity findByNameAndSellerId(String name, String sellerId);
+    ItemEntity findByName(String name);
     Page<ItemEntity> findBySellerId(String sellerId, Pageable pageable);
     void delete(ItemEntity itemEntity);
 }
