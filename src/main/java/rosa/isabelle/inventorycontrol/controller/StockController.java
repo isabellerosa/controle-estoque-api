@@ -6,7 +6,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import rosa.isabelle.inventorycontrol.dto.ItemDTO;
 import rosa.isabelle.inventorycontrol.dto.StockDTO;
+import rosa.isabelle.inventorycontrol.dto.StockItemDTO;
+import rosa.isabelle.inventorycontrol.dto.StoreDTO;
+import rosa.isabelle.inventorycontrol.model.request.StockRequestModel;
+import rosa.isabelle.inventorycontrol.model.response.StockItemModel;
 import rosa.isabelle.inventorycontrol.model.response.StockResponseModel;
 import rosa.isabelle.inventorycontrol.service.StockService;
 
@@ -21,6 +26,27 @@ public class StockController {
         this.stockService = stockService;
     }
 
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    StockItemModel addStock(@RequestBody StockRequestModel stockRequest, @PathVariable("storeId") String storeId){
+        ModelMapper modelMapper = new ModelMapper();
+
+        StoreDTO storeDTO = new StoreDTO();
+        storeDTO.setPublicId(storeId);
+
+        ItemDTO itemDTO = new ItemDTO();
+        itemDTO.setPublicId(stockRequest.getItem());
+
+        StockItemDTO stockItem = modelMapper.map(stockRequest, StockItemDTO.class);
+        stockItem.setItem(itemDTO);
+        stockItem.setStore(storeDTO);
+
+        StockItemDTO savedStock = stockService.addStockItem(stockItem);
+
+        StockItemModel returnSaved = modelMapper.map(savedStock, StockItemModel.class);
+
+        return returnSaved;
+    }
+
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     StockResponseModel getStocks(@PathVariable("storeId") String storeId,
                                        @RequestParam(name = "page", defaultValue = "1") int page,
@@ -28,7 +54,7 @@ public class StockController {
         try {
             ModelMapper mapper = new ModelMapper();
 
-            StockDTO stock = stockService.findStocks(storeId, page-1, size);
+            StockDTO stock = stockService.getStock(storeId, page-1, size);
 
             StockResponseModel returnedStock = mapper.map(stock, StockResponseModel.class);
 
