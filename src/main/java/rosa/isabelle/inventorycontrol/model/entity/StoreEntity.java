@@ -4,7 +4,6 @@ import lombok.Data;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.util.List;
 
@@ -18,15 +17,13 @@ public class StoreEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotEmpty
-    @Column(length = 64)
+    @NotBlank
     private String publicId;
 
-    @NotEmpty
+    @NotBlank
     private String name;
 
     @NotBlank
-    @Column(length = 64)
     private String ownerId;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "store", fetch = FetchType.LAZY)

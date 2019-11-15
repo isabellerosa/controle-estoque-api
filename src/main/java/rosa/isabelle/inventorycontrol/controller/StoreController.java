@@ -32,22 +32,22 @@ public class StoreController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
                  produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(code = HttpStatus.CREATED)
-    public StoreResponseModel createStore(@RequestBody StoreRequestModel storeRequest,
+    public StoreResponseModel createStore(@RequestBody StoreRequestModel newStoreRequest,
                                    @PathVariable("ownerId") String ownerId){
         try {
-            LOGGER.debug("Received store: " + storeRequest);
+            LOGGER.debug("Received store: " + newStoreRequest);
 
             ModelMapper mapper = new ModelMapper();
 
-            StoreDTO requestDTO = mapper.map(storeRequest, StoreDTO.class);
-            requestDTO.setOwnerId(ownerId);
+            StoreDTO newStoreDTO = mapper.map(newStoreRequest, StoreDTO.class);
+            newStoreDTO.setOwnerId(ownerId);
 
-            StoreDTO savedStore = storeService.createStore(requestDTO);
-            LOGGER.debug("Created store: " + savedStore);
+            StoreDTO createdStoreDTO = storeService.createStore(newStoreDTO);
+            LOGGER.debug("Created store: " + createdStoreDTO);
 
-            StoreResponseModel responseModel = mapper.map(savedStore, StoreResponseModel.class);
+            StoreResponseModel createdStoreResponse = mapper.map(createdStoreDTO, StoreResponseModel.class);
 
-            return responseModel;
+            return createdStoreResponse;
 
         }catch (CustomException customException){
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
@@ -58,18 +58,17 @@ public class StoreController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<StoreResponseModel> getStores(@PathVariable("ownerId") String ownerId){
+    public List<StoreResponseModel> findStores(@PathVariable("ownerId") String ownerId){
         try {
             ModelMapper mapper = new ModelMapper();
 
             List<StoreDTO> ownerStores = storeService.findStores(ownerId);
 
-            Type type = new TypeToken<List<StoreResponseModel>>() {
-            }.getType();
+            Type type = new TypeToken<List<StoreResponseModel>>() {}.getType();
 
-            List<StoreResponseModel> returnedStores = mapper.map(ownerStores, type);
+            List<StoreResponseModel> storeListResponse = mapper.map(ownerStores, type);
 
-            return returnedStores;
+            return storeListResponse;
         }catch (Exception exception){
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -88,9 +87,9 @@ public class StoreController {
 
             StoreDTO deletedStoreDTO = storeService.deleteStore(storeDTO);
 
-            StoreResponseModel deletedStore = mapper.map(deletedStoreDTO, StoreResponseModel.class);
+            StoreResponseModel deletedStoreResponse = mapper.map(deletedStoreDTO, StoreResponseModel.class);
 
-            return deletedStore;
+            return deletedStoreResponse;
 
         }catch(CustomException customException){
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
@@ -103,24 +102,24 @@ public class StoreController {
     @PutMapping(path = "/{storeId}",
                 consumes = MediaType.APPLICATION_JSON_VALUE,
                 produces = MediaType.APPLICATION_JSON_VALUE)
-    public StoreResponseModel editStore(@RequestBody StoreRequestModel storeRequest,
-                                        @PathVariable("ownerId") String ownerId,
-                                        @PathVariable("storeId") String storeId){
+    public StoreResponseModel updateStore(@RequestBody StoreRequestModel editedStoreRequest,
+                                          @PathVariable("ownerId") String ownerId,
+                                          @PathVariable("storeId") String storeId){
         try {
-            LOGGER.debug("Received payload: " + storeRequest);
+            LOGGER.debug("Received payload: " + editedStoreRequest);
 
             ModelMapper mapper = new ModelMapper();
 
-            StoreDTO requestDTO = mapper.map(storeRequest, StoreDTO.class);
-            requestDTO.setPublicId(storeId);
-            requestDTO.setOwnerId(ownerId);
+            StoreDTO editedStoreDTO = mapper.map(editedStoreRequest, StoreDTO.class);
+            editedStoreDTO.setPublicId(storeId);
+            editedStoreDTO.setOwnerId(ownerId);
 
-            StoreDTO editedStore = storeService.editStore(requestDTO);
-            LOGGER.debug("Modified store: " + editedStore);
+            StoreDTO modifiedStoreDTO = storeService.editStore(editedStoreDTO);
+            LOGGER.debug("Modified store: " + modifiedStoreDTO);
 
-            StoreResponseModel responseModel = mapper.map(editedStore, StoreResponseModel.class);
+            StoreResponseModel modifiedStoreResponse = mapper.map(modifiedStoreDTO, StoreResponseModel.class);
 
-            return responseModel;
+            return modifiedStoreResponse;
 
         }catch (CustomException customException){
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());

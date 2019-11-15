@@ -30,35 +30,42 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    public StoreDTO createStore(StoreDTO storeDTO) {
-        LOGGER.debug("Received storeDTO: " + storeDTO);
-        ModelMapper mapper = new ModelMapper();
-        mapper.getConfiguration().setAmbiguityIgnored(true);
-        mapper.createTypeMap(StoreDTO.class, StoreEntity.class)
-                .addMapping(StoreDTO::getPublicId, StoreEntity::setPublicId);
+    public StoreDTO createStore(StoreDTO newStoreDTO) {
+        try {
+            LOGGER.debug("Received storeDTO: " + newStoreDTO);
+            ModelMapper mapper = new ModelMapper();
+            mapper.getConfiguration().setAmbiguityIgnored(true);
+            mapper.createTypeMap(StoreDTO.class, StoreEntity.class)
+                    .addMapping(StoreDTO::getPublicId, StoreEntity::setPublicId);
 
-        StoreEntity received = mapper.map(storeDTO, StoreEntity.class);
+            StoreEntity newStore = mapper.map(newStoreDTO, StoreEntity.class);
 
-        if(findByName(received.getName()) != null) {
-            LOGGER.debug("There is already an existent store with id " + received.getPublicId() +
-                    "For user " + received.getOwnerId());
+            if (findByName(newStore.getName()) != null) {
+                LOGGER.debug("There is already an existent store with id " + newStore.getPublicId() +
+                        "For user " + newStore.getOwnerId());
 
-            throw new CustomException(ErrorMessage.DUPLICATED_DATA.getMessage() +
-                    ": there is already a registered store with ID " + storeDTO.getPublicId(),
-                    ErrorMessage.DUPLICATED_DATA.getStatusCode().value());
+                throw new CustomException(ErrorMessage.DUPLICATED_DATA.getMessage() +
+                        ": there is already a registered store with ID " + newStoreDTO.getPublicId(),
+                        ErrorMessage.DUPLICATED_DATA.getStatusCode().value());
+            }
+
+            do {
+                newStore.setPublicId(idBuilder.build());
+            } while (findByPublicId(newStore.getPublicId()) != null);
+
+            StoreEntity createdStore = storeRepository.save(newStore);
+
+            LOGGER.debug("Saved store: " + createdStore);
+
+            StoreDTO createdStoreDTO = mapper.map(createdStore, StoreDTO.class);
+
+            return createdStoreDTO;
+        }catch (CustomException customException) {
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        do{
-            received.setPublicId(idBuilder.build());
-        }while(findByPublicId(received.getPublicId()) != null);
-
-        StoreEntity saved = storeRepository.save(received);
-
-        LOGGER.debug("Saved store: " + saved);
-
-        StoreDTO savedDTO = mapper.map(saved, StoreDTO.class);
-
-        return savedDTO;
     }
 
     private StoreEntity findByPublicId(String publicId){
@@ -70,66 +77,95 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    public StoreDTO editStore(StoreDTO storeDTO) {
-        StoreEntity originalStore = findByPublicId(storeDTO.getPublicId());
+    public StoreDTO editStore(StoreDTO editedStoreDTO) {
+        try {
+            StoreEntity originalStore = findByPublicId(editedStoreDTO.getPublicId());
 
-        if(originalStore == null)
-            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
-                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+            if (originalStore == null)
+                throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                        ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
 
-        ModelMapper mapper = new ModelMapper();
+            ModelMapper mapper = new ModelMapper();
 
-        StoreEntity request = mapper.map(originalStore, StoreEntity.class);
-        request.setName(storeDTO.getName());
+            StoreEntity editedStore = mapper.map(originalStore, StoreEntity.class);
+            editedStore.setName(editedStoreDTO.getName());
 
-        StoreEntity modified = storeRepository.save(request);
+            StoreEntity modifiedStore = storeRepository.save(editedStore);
 
-        StoreDTO modifiedDTO = mapper.map(modified, StoreDTO.class);
+            StoreDTO modifiedStoreDTO = mapper.map(modifiedStore, StoreDTO.class);
 
-        return modifiedDTO;
+            return modifiedStoreDTO;
+        }catch (CustomException customException) {
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
     }
 
     @Override
     public StoreDTO deleteStore(StoreDTO storeDTO) {
-        StoreEntity request = findByPublicId(storeDTO.getPublicId());
+        try {
+            StoreEntity store = findByPublicId(storeDTO.getPublicId());
 
-        if(request == null)
-            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
-                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+            if (store == null)
+                throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                        ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
 
-        storeRepository.delete(request);
+            storeRepository.delete(store);
 
-        ModelMapper mapper = new ModelMapper();
-        StoreDTO deleted = mapper.map(request, StoreDTO.class);
+            ModelMapper mapper = new ModelMapper();
+            StoreDTO deletedStore = mapper.map(store, StoreDTO.class);
 
-        return deleted;
+            return deletedStore;
+        }catch (CustomException customException) {
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
     }
 
     @Override
     public List<StoreDTO> findStores(String ownerId) {
-        ModelMapper modelMapper = new ModelMapper();
-        List<StoreEntity> stores = storeRepository.findByOwnerId(ownerId);
+        try {
+            ModelMapper modelMapper = new ModelMapper();
+            List<StoreEntity> stores = storeRepository.findByOwnerId(ownerId);
 
-        Type typeToken = new TypeToken<List<StoreDTO>>(){}.getType();
+            Type typeToken = new TypeToken<List<StoreDTO>>() {
+            }.getType();
 
-        List<StoreDTO> returnedStores = modelMapper.map(stores, typeToken);
+            List<StoreDTO> storesDTO = modelMapper.map(stores, typeToken);
 
-        return returnedStores;
+            return storesDTO;
+        }catch (CustomException customException) {
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
     }
 
     @Override
     public StoreDTO findStore(String publicId) {
-        StoreEntity store = findByPublicId(publicId);
+        try {
+            StoreEntity store = findByPublicId(publicId);
 
-        if(store == null){
-            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
-                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+            if (store == null) {
+                throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                        ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+            }
+
+            ModelMapper mapper = new ModelMapper();
+
+            StoreDTO storeDTO = mapper.map(store, StoreDTO.class);
+
+            return storeDTO;
+        }catch (CustomException customException) {
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        ModelMapper mapper = new ModelMapper();
-
-        StoreDTO foundStore = mapper.map(store, StoreDTO.class);
-
-        return foundStore;
     }
 }
