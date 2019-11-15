@@ -8,5 +8,6 @@ public interface ItemService {
     ItemDTO registerItem(ItemDTO itemDTO);
     ItemDTO editItem(ItemDTO itemDTO);
     ItemDTO deleteItem(ItemDTO itemDTO);
-    List<ItemDTO> getItems(String sellerId, int page, int size);
+    List<ItemDTO> findItems(String sellerId, int page, int size);
+    ItemDTO findItem(String publicId);
 }

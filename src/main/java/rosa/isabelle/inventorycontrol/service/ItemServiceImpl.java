@@ -102,7 +102,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDTO> getItems(String sellerId, int page, int size) {
+    public List<ItemDTO> findItems(String sellerId, int page, int size) {
         ModelMapper modelMapper = new ModelMapper();
         final int DEFAULT_SIZE = 15;
         final int FIRST_PAGE = 0;
@@ -119,4 +119,22 @@ public class ItemServiceImpl implements ItemService {
 
         return returnedItems;
     }
+
+    @Override
+    public ItemDTO findItem(String publicId) {
+        ItemEntity itemEntity = findByPublicId(publicId);
+
+        if(itemEntity == null){
+            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+        }
+
+        ModelMapper modelMapper = new ModelMapper();
+
+        ItemDTO foundItem = modelMapper.map(itemEntity, ItemDTO.class);
+
+        return foundItem;
+    }
+
+
 }

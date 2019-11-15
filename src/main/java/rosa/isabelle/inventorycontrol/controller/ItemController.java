@@ -59,7 +59,7 @@ public class ItemController {
         try {
             ModelMapper mapper = new ModelMapper();
 
-            List<ItemDTO> items = itemService.getItems(sellerId, page-1, size);
+            List<ItemDTO> items = itemService.findItems(sellerId, page-1, size);
 
             Type type = new TypeToken<List<ItemResponseModel>>() {}.getType();
 
