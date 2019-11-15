@@ -65,8 +65,22 @@ public class StockController {
         }
     }
 
+    @PutMapping(path = "/{itemId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    StockItemModel editItemOnStock(@RequestBody StockItemModel stockItemRequest ,
+                                   @PathVariable("itemId") String itemId,
+                                   @PathVariable("storeId") String storeId){
+        ModelMapper mapper = new ModelMapper();
+        StockItemDTO stockItem = mapper.map(stockItemRequest, StockItemDTO.class);
+
+        StockItemDTO modifiedItem = stockService.editStockItem(storeId, itemId, stockItem);
+
+        StockItemModel returnModified = mapper.map(modifiedItem, StockItemModel.class);
+
+        return returnModified;
+    }
+
     @DeleteMapping(path = "/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    StockItemModel deleteItem(@PathVariable("itemId") String itemId, @PathVariable("storeId") String storeId){
+    StockItemModel deleteItemFromStock(@PathVariable("itemId") String itemId, @PathVariable("storeId") String storeId){
         ModelMapper modelMapper = new ModelMapper();
 
         StockItemDTO deletedItem = stockService.removeStockItem(storeId, itemId);

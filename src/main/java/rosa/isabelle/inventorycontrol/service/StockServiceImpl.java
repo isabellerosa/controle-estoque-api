@@ -119,6 +119,35 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
+    public StockItemDTO editStockItem(String storeId, String itemId, StockItemDTO requestStockItemDTO) {
+        StoreEntity store = findStore(storeId);
+        ItemEntity item = findItem(itemId);
+
+        if (store == null || item == null) {
+            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
+
+        StockEntity originalStockItem = findStockItem(store, item);
+
+        if (originalStockItem == null) {
+            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
+
+        ModelMapper modelMapper = new ModelMapper();
+
+        StockEntity editedStockItem = modelMapper.map(originalStockItem, StockEntity.class);
+        editedStockItem.setQuantity(requestStockItemDTO.getQuantity());
+
+        StockEntity updatedStockItem = stockRepository.save(editedStockItem);
+
+        StockItemDTO returnStockItem = modelMapper.map(updatedStockItem, StockItemDTO.class);
+
+        return returnStockItem;
+    }
+
+    @Override
     public StockItemDTO removeStockItem(String storeId, String itemId) {
         StoreEntity storeEntity = findStore(storeId);
         ItemEntity itemEntity = findItem(itemId);
