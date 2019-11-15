@@ -12,4 +12,5 @@ public interface ItemRepository extends PagingAndSortingRepository<ItemEntity, L
     ItemEntity findByPublicId(String publicId);
     ItemEntity findByNameAndSellerId(String name, String sellerId);
     Page<ItemEntity> findBySellerId(String sellerId, Pageable pageable);
+    void delete(ItemEntity itemEntity);
 }

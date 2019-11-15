@@ -71,7 +71,18 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO deleteItem(ItemDTO itemDTO) {
-        return null;
+        ItemEntity request = findByPublicId(itemDTO.getPublicId());
+
+        if(request == null)
+            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+
+        itemRepository.delete(request);
+
+        ModelMapper mapper = new ModelMapper();
+        ItemDTO deleted = mapper.map(request, ItemDTO.class);
+
+        return deleted;
     }
 
     @Override

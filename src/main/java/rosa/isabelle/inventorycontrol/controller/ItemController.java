@@ -71,4 +71,29 @@ public class ItemController {
         }
     }
 
+    @DeleteMapping(path = "/{itemId}",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ItemResponseModel deleteItem(@PathVariable("sellerId") String sellerId,
+                                          @PathVariable("itemId") String itemId) {
+        try {
+            ModelMapper mapper = new ModelMapper();
+
+            ItemDTO itemDTO = new ItemDTO();
+            itemDTO.setPublicId(itemId);
+            itemDTO.setSellerId(sellerId);
+
+            ItemDTO deletedItemDTO = itemService.deleteItem(itemDTO);
+
+            ItemResponseModel deletedItem = mapper.map(deletedItemDTO, ItemResponseModel.class);
+
+            return deletedItem;
+
+        }catch(CustomException customException){
+            HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
+            throw new ResponseStatusException(code, customException.getMessage());
+        }catch (Exception exception){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
