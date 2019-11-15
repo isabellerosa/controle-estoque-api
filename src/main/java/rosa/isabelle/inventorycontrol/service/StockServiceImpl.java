@@ -38,34 +38,41 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public StockItemDTO addStockItem(StockItemDTO stockDTO) {
-        String storeId = stockDTO.getStore().getPublicId();
-        String itemId = stockDTO.getItem().getPublicId();
+        try {
+            String storeId = stockDTO.getStore().getPublicId();
+            String itemId = stockDTO.getItem().getPublicId();
 
-        StoreEntity storeEntity = findStore(storeId);
-        ItemEntity itemEntity = findItem(itemId);
+            StoreEntity storeEntity = findStore(storeId);
+            ItemEntity itemEntity = findItem(itemId);
 
-        if (storeEntity == null || itemEntity == null) {
-            ErrorMessage error = ErrorMessage.INVALID_ENTRY;
+            if (storeEntity == null || itemEntity == null) {
+                ErrorMessage error = ErrorMessage.INVALID_ENTRY;
+                throw new CustomException(error.getMessage(), error.getStatusCode().value());
+            }
+
+            if (findStockItem(storeEntity, itemEntity) != null) {
+                throw new CustomException(ErrorMessage.DUPLICATED_DATA.getMessage(),
+                        ErrorMessage.DUPLICATED_DATA.getStatusCode().value());
+            }
+
+            ModelMapper mapper = new ModelMapper();
+
+            StockEntity stockEntity = new StockEntity();
+            stockEntity.setStore(storeEntity);
+            stockEntity.setItem(itemEntity);
+            stockEntity.setQuantity(stockDTO.getQuantity());
+
+            StockEntity savedEntity = stockRepository.save(stockEntity);
+
+            StockItemDTO saved = mapper.map(savedEntity, StockItemDTO.class);
+
+            return saved;
+        } catch (CustomException customException) {
+            throw customException;
+        } catch (Exception exception) {
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        if (findStockItem(storeEntity, itemEntity) != null) {
-            throw new CustomException(ErrorMessage.DUPLICATED_DATA.getMessage(),
-                    ErrorMessage.DUPLICATED_DATA.getStatusCode().value());
-        }
-
-        ModelMapper mapper = new ModelMapper();
-
-        StockEntity stockEntity = new StockEntity();
-        stockEntity.setStore(storeEntity);
-        stockEntity.setItem(itemEntity);
-        stockEntity.setQuantity(stockDTO.getQuantity());
-
-        StockEntity savedEntity = stockRepository.save(stockEntity);
-
-        StockItemDTO saved = mapper.map(savedEntity, StockItemDTO.class);
-
-        return saved;
     }
 
     private StockEntity findStockItem(StoreEntity store, ItemEntity item) {
@@ -82,94 +89,114 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public StockDTO getStock(String storeId, int page, int size) {
+        try {
+            StoreEntity store = findStore(storeId);
 
-        StoreEntity store = findStore(storeId);
+            if (store == null) {
+                throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                        ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+            }
 
-        if (store == null) {
-            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
-                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+            ModelMapper modelMapper = new ModelMapper();
+            final int DEFAULT_SIZE = 15;
+            final int FIRST_PAGE = 0;
+
+            Pageable pageable = PageRequest.of(
+                    Math.max(page, FIRST_PAGE),
+                    size > 0 ? size : DEFAULT_SIZE);
+
+            Page<StockEntity> stocks = stockRepository.findByStore(store, pageable);
+
+            List<StockItemDTO> items = new ArrayList<>();
+            stocks.getContent().forEach(stock -> {
+                StockItemDTO stockItemDTO = new StockItemDTO();
+                ItemDTO itemDTO = modelMapper.map(stock.getItem(), ItemDTO.class);
+                stockItemDTO.setItem(itemDTO);
+                stockItemDTO.setQuantity(stock.getQuantity());
+
+                items.add(stockItemDTO);
+            });
+
+            StoreDTO storeDTO = modelMapper.map(store, StoreDTO.class);
+            StockDTO returnedStocks = new StockDTO();
+            returnedStocks.setStore(storeDTO);
+            returnedStocks.setItems(items);
+
+            return returnedStocks;
+        } catch (CustomException customException) {
+            throw customException;
+        } catch (Exception exception) {
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        ModelMapper modelMapper = new ModelMapper();
-        final int DEFAULT_SIZE = 15;
-        final int FIRST_PAGE = 0;
-
-        Pageable pageable = PageRequest.of(
-                Math.max(page, FIRST_PAGE),
-                size > 0 ? size : DEFAULT_SIZE);
-
-        Page<StockEntity> stocks = stockRepository.findByStore(store, pageable);
-
-        List<StockItemDTO> items = new ArrayList<>();
-        stocks.getContent().forEach(stock -> {
-            StockItemDTO stockItemDTO = new StockItemDTO();
-            ItemDTO itemDTO = modelMapper.map(stock.getItem(), ItemDTO.class);
-            stockItemDTO.setItem(itemDTO);
-            stockItemDTO.setQuantity(stock.getQuantity());
-
-            items.add(stockItemDTO);
-        });
-
-        StoreDTO storeDTO = modelMapper.map(store, StoreDTO.class);
-        StockDTO returnedStocks = new StockDTO();
-        returnedStocks.setStore(storeDTO);
-        returnedStocks.setItems(items);
-
-        return returnedStocks;
     }
 
     @Override
     public StockItemDTO editStockItem(String storeId, String itemId, StockItemDTO requestStockItemDTO) {
-        StoreEntity store = findStore(storeId);
-        ItemEntity item = findItem(itemId);
+        try {
+            StoreEntity store = findStore(storeId);
+            ItemEntity item = findItem(itemId);
 
-        if (store == null || item == null) {
-            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            if (store == null || item == null) {
+                ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+                throw new CustomException(error.getMessage(), error.getStatusCode().value());
+            }
+
+            StockEntity originalStockItem = findStockItem(store, item);
+
+            if (originalStockItem == null) {
+                ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+                throw new CustomException(error.getMessage(), error.getStatusCode().value());
+            }
+
+            ModelMapper modelMapper = new ModelMapper();
+
+            StockEntity editedStockItem = modelMapper.map(originalStockItem, StockEntity.class);
+            editedStockItem.setQuantity(requestStockItemDTO.getQuantity());
+
+            StockEntity updatedStockItem = stockRepository.save(editedStockItem);
+
+            StockItemDTO returnStockItem = modelMapper.map(updatedStockItem, StockItemDTO.class);
+
+            return returnStockItem;
+        } catch (CustomException customException) {
+            throw customException;
+        } catch (Exception exception) {
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        StockEntity originalStockItem = findStockItem(store, item);
-
-        if (originalStockItem == null) {
-            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
-            throw new CustomException(error.getMessage(), error.getStatusCode().value());
-        }
-
-        ModelMapper modelMapper = new ModelMapper();
-
-        StockEntity editedStockItem = modelMapper.map(originalStockItem, StockEntity.class);
-        editedStockItem.setQuantity(requestStockItemDTO.getQuantity());
-
-        StockEntity updatedStockItem = stockRepository.save(editedStockItem);
-
-        StockItemDTO returnStockItem = modelMapper.map(updatedStockItem, StockItemDTO.class);
-
-        return returnStockItem;
     }
 
     @Override
     public StockItemDTO removeStockItem(String storeId, String itemId) {
-        StoreEntity storeEntity = findStore(storeId);
-        ItemEntity itemEntity = findItem(itemId);
+        try {
+            StoreEntity storeEntity = findStore(storeId);
+            ItemEntity itemEntity = findItem(itemId);
 
-        if (storeEntity == null || itemEntity == null) {
-            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            if (storeEntity == null || itemEntity == null) {
+                ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+                throw new CustomException(error.getMessage(), error.getStatusCode().value());
+            }
+
+            StockEntity item = findStockItem(storeEntity, itemEntity);
+
+            if (item == null) {
+                ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+                throw new CustomException(error.getMessage(), error.getStatusCode().value());
+            }
+
+            stockRepository.delete(item);
+
+            ModelMapper mapper = new ModelMapper();
+            StockItemDTO deletedItem = mapper.map(item, StockItemDTO.class);
+
+            return deletedItem;
+        } catch (CustomException customException) {
+            throw customException;
+        } catch (Exception exception) {
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        StockEntity item = findStockItem(storeEntity, itemEntity);
-
-        if(item == null){
-            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
-            throw new CustomException(error.getMessage(), error.getStatusCode().value());
-        }
-
-        stockRepository.delete(item);
-
-        ModelMapper mapper = new ModelMapper();
-        StockItemDTO deletedItem = mapper.map(item, StockItemDTO.class);
-
-        return deletedItem;
     }
 
 }

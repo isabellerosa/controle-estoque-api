@@ -53,9 +53,9 @@ public class ItemController {
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<ItemResponseModel> getItems(@PathVariable("sellerId") String sellerId,
-                                            @RequestParam(name = "page", defaultValue = "1") int page,
-                                            @RequestParam(name = "size", defaultValue = "15") int size) {
+    public List<ItemResponseModel> findItems(@PathVariable("sellerId") String sellerId,
+                                             @RequestParam(name = "page", defaultValue = "1") int page,
+                                             @RequestParam(name = "size", defaultValue = "15") int size) {
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -78,17 +78,17 @@ public class ItemController {
     @PutMapping(path = "/{itemId}",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ItemResponseModel editItem(@RequestBody ItemRequestModel itemRequest,
-                                      @PathVariable("sellerId") String sellerId,
-                                      @PathVariable("itemId") String itemId) {
+    public ItemResponseModel updateItem(@RequestBody ItemRequestModel editedItemRequest,
+                                        @PathVariable("sellerId") String sellerId,
+                                        @PathVariable("itemId") String itemId) {
         try {
             ModelMapper mapper = new ModelMapper();
 
-            ItemDTO requestDTO = mapper.map(itemRequest, ItemDTO.class);
-            requestDTO.setPublicId(itemId);
-            requestDTO.setSellerId(sellerId);
+            ItemDTO editedItemDTO = mapper.map(editedItemRequest, ItemDTO.class);
+            editedItemDTO.setPublicId(itemId);
+            editedItemDTO.setSellerId(sellerId);
 
-            ItemDTO editedItem = itemService.editItem(requestDTO);
+            ItemDTO editedItem = itemService.editItem(editedItemDTO);
 
             ItemResponseModel modifiedItemResponse = mapper.map(editedItem, ItemResponseModel.class);
 

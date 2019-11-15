@@ -10,6 +10,7 @@ import rosa.isabelle.inventorycontrol.dto.ItemDTO;
 import rosa.isabelle.inventorycontrol.dto.StockDTO;
 import rosa.isabelle.inventorycontrol.dto.StockItemDTO;
 import rosa.isabelle.inventorycontrol.dto.StoreDTO;
+import rosa.isabelle.inventorycontrol.exception.CustomException;
 import rosa.isabelle.inventorycontrol.model.request.StockRequestModel;
 import rosa.isabelle.inventorycontrol.model.response.StockItemModel;
 import rosa.isabelle.inventorycontrol.model.response.StockResponseModel;
@@ -27,65 +28,90 @@ public class StockController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    StockItemModel addStock(@RequestBody StockRequestModel stockRequest, @PathVariable("storeId") String storeId){
-        ModelMapper modelMapper = new ModelMapper();
+    StockItemModel createStock(@RequestBody StockRequestModel newStockRequest,
+                               @PathVariable("storeId") String storeId) {
+        try {
+            ModelMapper modelMapper = new ModelMapper();
 
-        StoreDTO storeDTO = new StoreDTO();
-        storeDTO.setPublicId(storeId);
+            StoreDTO storeDTO = new StoreDTO();
+            storeDTO.setPublicId(storeId);
 
-        ItemDTO itemDTO = new ItemDTO();
-        itemDTO.setPublicId(stockRequest.getItem());
+            ItemDTO itemDTO = new ItemDTO();
+            itemDTO.setPublicId(newStockRequest.getItem());
 
-        StockItemDTO stockItem = modelMapper.map(stockRequest, StockItemDTO.class);
-        stockItem.setItem(itemDTO);
-        stockItem.setStore(storeDTO);
+            StockItemDTO newStockItemDTO = modelMapper.map(newStockRequest, StockItemDTO.class);
+            newStockItemDTO.setItem(itemDTO);
+            newStockItemDTO.setStore(storeDTO);
 
-        StockItemDTO savedStock = stockService.addStockItem(stockItem);
+            StockItemDTO createdStockItemDTO = stockService.addStockItem(newStockItemDTO);
 
-        StockItemModel returnSaved = modelMapper.map(savedStock, StockItemModel.class);
+            StockItemModel createdStockItemResponse = modelMapper.map(createdStockItemDTO, StockItemModel.class);
 
-        return returnSaved;
+            return createdStockItemResponse;
+        }catch (CustomException customException){
+            HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
+            throw new ResponseStatusException(code, customException.getMessage());
+        }catch (Exception exception){
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    StockResponseModel getStocks(@PathVariable("storeId") String storeId,
-                                       @RequestParam(name = "page", defaultValue = "1") int page,
-                                       @RequestParam(name = "size", defaultValue = "15") int size){
+    StockResponseModel findStocks(@PathVariable("storeId") String storeId,
+                                  @RequestParam(name = "page", defaultValue = "1") int page,
+                                  @RequestParam(name = "size", defaultValue = "15") int size) {
         try {
             ModelMapper mapper = new ModelMapper();
 
-            StockDTO stock = stockService.getStock(storeId, page-1, size);
+            StockDTO stockPageDTO = stockService.getStock(storeId, page - 1, size);
 
-            StockResponseModel returnedStock = mapper.map(stock, StockResponseModel.class);
+            StockResponseModel stockPageResponse = mapper.map(stockPageDTO, StockResponseModel.class);
 
-            return returnedStock;
-        }catch (Exception exception){
-            exception.printStackTrace();
+            return stockPageResponse;
+        } catch (CustomException customException) {
+            HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
+            throw new ResponseStatusException(code, customException.getMessage());
+        } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping(path = "/{itemId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    StockItemModel editItemOnStock(@RequestBody StockItemModel stockItemRequest ,
-                                   @PathVariable("itemId") String itemId,
-                                   @PathVariable("storeId") String storeId){
-        ModelMapper mapper = new ModelMapper();
-        StockItemDTO stockItem = mapper.map(stockItemRequest, StockItemDTO.class);
+    StockItemModel updateStock(@RequestBody StockItemModel editedStockItemRequest,
+                               @PathVariable("itemId") String itemId,
+                               @PathVariable("storeId") String storeId) {
+        try {
+            ModelMapper mapper = new ModelMapper();
+            StockItemDTO editedStockItemDTO = mapper.map(editedStockItemRequest, StockItemDTO.class);
 
-        StockItemDTO modifiedItem = stockService.editStockItem(storeId, itemId, stockItem);
+            StockItemDTO modifiedStockItemDTO = stockService.editStockItem(storeId, itemId, editedStockItemDTO);
 
-        StockItemModel returnModified = mapper.map(modifiedItem, StockItemModel.class);
+            StockItemModel modifiedStockItemResponse = mapper.map(modifiedStockItemDTO, StockItemModel.class);
 
-        return returnModified;
+            return modifiedStockItemResponse;
+        } catch (CustomException customException) {
+            HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
+            throw new ResponseStatusException(code, customException.getMessage());
+        } catch (Exception exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @DeleteMapping(path = "/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    StockItemModel deleteItemFromStock(@PathVariable("itemId") String itemId, @PathVariable("storeId") String storeId){
-        ModelMapper modelMapper = new ModelMapper();
+    StockItemModel deleteStock(@PathVariable("itemId") String itemId, @PathVariable("storeId") String storeId) {
+        try {
+            ModelMapper modelMapper = new ModelMapper();
 
-        StockItemDTO deletedItem = stockService.removeStockItem(storeId, itemId);
+            StockItemDTO deletedStockItemDTO = stockService.removeStockItem(storeId, itemId);
 
-        StockItemModel returnDeleted = modelMapper.map(deletedItem, StockItemModel.class);
-        return returnDeleted;
+            StockItemModel deletedStockItemResponse = modelMapper.map(deletedStockItemDTO, StockItemModel.class);
+
+            return deletedStockItemResponse;
+        } catch (CustomException customException) {
+            HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
+            throw new ResponseStatusException(code, customException.getMessage());
+        } catch (Exception exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }
