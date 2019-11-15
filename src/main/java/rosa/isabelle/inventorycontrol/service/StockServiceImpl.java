@@ -117,4 +117,30 @@ public class StockServiceImpl implements StockService {
 
         return returnedStocks;
     }
+
+    @Override
+    public StockItemDTO removeStockItem(String storeId, String itemId) {
+        StoreEntity storeEntity = findStore(storeId);
+        ItemEntity itemEntity = findItem(itemId);
+
+        if (storeEntity == null || itemEntity == null) {
+            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
+
+        StockEntity item = findStockItem(storeEntity, itemEntity);
+
+        if(item == null){
+            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
+
+        stockRepository.delete(item);
+
+        ModelMapper mapper = new ModelMapper();
+        StockItemDTO deletedItem = mapper.map(item, StockItemDTO.class);
+
+        return deletedItem;
+    }
+
 }

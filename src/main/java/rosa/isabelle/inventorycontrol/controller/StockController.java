@@ -64,4 +64,14 @@ public class StockController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @DeleteMapping(path = "/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    StockItemModel deleteItem(@PathVariable("itemId") String itemId, @PathVariable("storeId") String storeId){
+        ModelMapper modelMapper = new ModelMapper();
+
+        StockItemDTO deletedItem = stockService.removeStockItem(storeId, itemId);
+
+        StockItemModel returnDeleted = modelMapper.map(deletedItem, StockItemModel.class);
+        return returnDeleted;
+    }
 }
