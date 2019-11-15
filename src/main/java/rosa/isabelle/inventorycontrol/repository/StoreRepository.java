@@ -9,7 +9,8 @@ import java.util.List;
 @Repository
 public interface StoreRepository extends CrudRepository<StoreEntity, Long> {
     StoreEntity save(StoreEntity store);
-    StoreEntity findByPublicIdAndOwnerId(String publicId, String ownerId);
+    StoreEntity findByPublicId(String publicId);
     List<StoreEntity> findByOwnerId(String ownerId);
     void delete(StoreEntity store);
+    StoreEntity findByName(String name);
 }

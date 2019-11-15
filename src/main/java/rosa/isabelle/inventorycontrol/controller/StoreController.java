@@ -62,7 +62,7 @@ public class StoreController {
         try {
             ModelMapper mapper = new ModelMapper();
 
-            List<StoreDTO> ownerStores = storeService.getStores(ownerId);
+            List<StoreDTO> ownerStores = storeService.findStores(ownerId);
 
             Type type = new TypeToken<List<StoreResponseModel>>() {
             }.getType();

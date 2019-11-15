@@ -11,6 +11,7 @@ import rosa.isabelle.inventorycontrol.exception.CustomException;
 import rosa.isabelle.inventorycontrol.exception.ErrorMessage;
 import rosa.isabelle.inventorycontrol.model.entity.StoreEntity;
 import rosa.isabelle.inventorycontrol.repository.StoreRepository;
+import rosa.isabelle.inventorycontrol.utils.IdBuilder;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -18,11 +19,14 @@ import java.util.List;
 @Service
 public class StoreServiceImpl implements StoreService {
     private StoreRepository storeRepository;
+    private IdBuilder idBuilder;
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreServiceImpl.class);
 
     @Autowired
     public StoreServiceImpl(StoreRepository storeRepository) {
         this.storeRepository = storeRepository;
+        this.idBuilder = new IdBuilder().appendValidCharacters(IdBuilder.ALPHABET_CAPS)
+                                        .appendValidCharacters(IdBuilder.ALPHABET_NO_CAPS);
     }
 
     @Override
@@ -30,13 +34,12 @@ public class StoreServiceImpl implements StoreService {
         LOGGER.debug("Received storeDTO: " + storeDTO);
         ModelMapper mapper = new ModelMapper();
         mapper.getConfiguration().setAmbiguityIgnored(true);
-
         mapper.createTypeMap(StoreDTO.class, StoreEntity.class)
                 .addMapping(StoreDTO::getPublicId, StoreEntity::setPublicId);
 
         StoreEntity received = mapper.map(storeDTO, StoreEntity.class);
 
-        if(findByPublicId(received.getPublicId(), received.getOwnerId()) != null) {
+        if(findByName(received.getName()) != null) {
             LOGGER.debug("There is already an existent store with id " + received.getPublicId() +
                     "For user " + received.getOwnerId());
 
@@ -44,6 +47,10 @@ public class StoreServiceImpl implements StoreService {
                     ": there is already a registered store with ID " + storeDTO.getPublicId(),
                     ErrorMessage.DUPLICATED_DATA.getStatusCode().value());
         }
+
+        do{
+            received.setPublicId(idBuilder.build());
+        }while(findByPublicId(received.getPublicId()) != null);
 
         StoreEntity saved = storeRepository.save(received);
 
@@ -54,13 +61,17 @@ public class StoreServiceImpl implements StoreService {
         return savedDTO;
     }
 
-    private StoreEntity findByPublicId(String publidId, String ownerId){
-        return storeRepository.findByPublicIdAndOwnerId(publidId, ownerId);
+    private StoreEntity findByPublicId(String publicId){
+        return storeRepository.findByPublicId(publicId);
+    }
+
+    private StoreEntity findByName(String name){
+        return storeRepository.findByName(name);
     }
 
     @Override
     public StoreDTO editStore(StoreDTO storeDTO) {
-        StoreEntity originalStore = findByPublicId(storeDTO.getPublicId(), storeDTO.getOwnerId());
+        StoreEntity originalStore = findByPublicId(storeDTO.getPublicId());
 
         if(originalStore == null)
             throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
@@ -80,7 +91,7 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreDTO deleteStore(StoreDTO storeDTO) {
-        StoreEntity request = findByPublicId(storeDTO.getPublicId(), storeDTO.getOwnerId());
+        StoreEntity request = findByPublicId(storeDTO.getPublicId());
 
         if(request == null)
             throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
@@ -95,7 +106,7 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    public List<StoreDTO> getStores(String ownerId) {
+    public List<StoreDTO> findStores(String ownerId) {
         ModelMapper modelMapper = new ModelMapper();
         List<StoreEntity> stores = storeRepository.findByOwnerId(ownerId);
 
@@ -104,5 +115,21 @@ public class StoreServiceImpl implements StoreService {
         List<StoreDTO> returnedStores = modelMapper.map(stores, typeToken);
 
         return returnedStores;
+    }
+
+    @Override
+    public StoreDTO findStore(String publicId) {
+        StoreEntity store = findByPublicId(publicId);
+
+        if(store == null){
+            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+        }
+
+        ModelMapper mapper = new ModelMapper();
+
+        StoreDTO foundStore = mapper.map(store, StoreDTO.class);
+
+        return foundStore;
     }
 }
