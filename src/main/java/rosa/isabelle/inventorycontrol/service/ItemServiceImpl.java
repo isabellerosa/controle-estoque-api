@@ -32,29 +32,36 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO registerItem(ItemDTO newItemDTO) {
-        ModelMapper mapper = new ModelMapper();
-        mapper.getConfiguration().setAmbiguityIgnored(true);
+        try {
+            ModelMapper mapper = new ModelMapper();
+            mapper.getConfiguration().setAmbiguityIgnored(true);
 
-        mapper.createTypeMap(ItemDTO.class, ItemEntity.class)
-                .addMapping(ItemDTO::getPublicId, ItemEntity::setPublicId);
+            mapper.createTypeMap(ItemDTO.class, ItemEntity.class)
+                    .addMapping(ItemDTO::getPublicId, ItemEntity::setPublicId);
 
-        ItemEntity newItem = mapper.map(newItemDTO, ItemEntity.class);
+            ItemEntity newItem = mapper.map(newItemDTO, ItemEntity.class);
 
-        if (findByName(newItem.getName()) != null) {
-            ErrorMessage error = ErrorMessage.DUPLICATED_DATA;
-            throw new CustomException(error.getMessage(),
-                    error.getStatusCode().value());
+            if (findByName(newItem.getName()) != null) {
+                ErrorMessage error = ErrorMessage.DUPLICATED_DATA;
+                throw new CustomException(error.getMessage(),
+                        error.getStatusCode().value());
+            }
+
+            do {
+                newItem.setPublicId(idGenerator.build());
+            } while (!isPublicIdUnique(newItem.getPublicId()));
+
+            ItemEntity savedItem = itemRepository.save(newItem);
+
+            ItemDTO savedItemDTO = mapper.map(savedItem, ItemDTO.class);
+
+            return savedItemDTO;
+        }catch (CustomException customException) {
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        do {
-            newItem.setPublicId(idGenerator.build());
-        } while (!isPublicIdUnique(newItem.getPublicId()));
-
-        ItemEntity savedItem = itemRepository.save(newItem);
-
-        ItemDTO savedItemDTO = mapper.map(savedItem, ItemDTO.class);
-
-        return savedItemDTO;
     }
 
     private ItemEntity findByPublicId(String publidId) {
@@ -71,76 +78,104 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO editItem(ItemDTO editedItemDTO) {
-        ItemEntity originalItem = findByPublicId(editedItemDTO.getPublicId());
+        try {
+            ItemEntity originalItem = findByPublicId(editedItemDTO.getPublicId());
 
-        if (originalItem == null) {
-            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            if (originalItem == null) {
+                ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+                throw new CustomException(error.getMessage(), error.getStatusCode().value());
+            }
+
+            ModelMapper mapper = new ModelMapper();
+
+            ItemEntity editedItem = mapper.map(originalItem, ItemEntity.class);
+            editedItem.setName(editedItemDTO.getName());
+            editedItem.setPrice(editedItemDTO.getPrice());
+
+            ItemEntity modifiedItem = itemRepository.save(editedItem);
+
+            ItemDTO modifiedItemDTO = mapper.map(modifiedItem, ItemDTO.class);
+
+            return modifiedItemDTO;
+        }catch (CustomException customException){
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        ModelMapper mapper = new ModelMapper();
-
-        ItemEntity editedItem = mapper.map(originalItem, ItemEntity.class);
-        editedItem.setName(editedItemDTO.getName());
-        editedItem.setPrice(editedItemDTO.getPrice());
-
-        ItemEntity modifiedItem = itemRepository.save(editedItem);
-
-        ItemDTO modifiedItemDTO = mapper.map(modifiedItem, ItemDTO.class);
-
-        return modifiedItemDTO;
     }
 
     @Override
     public ItemDTO deleteItem(String publicId) {
-        ItemEntity item = itemRepository.findByPublicId(publicId);
+        try {
+            ItemEntity item = itemRepository.findByPublicId(publicId);
 
-        if (item == null) {
-            ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+            if (item == null) {
+                ErrorMessage error = ErrorMessage.NO_DATA_FOUND;
+                throw new CustomException(error.getMessage(), error.getStatusCode().value());
+            }
+
+            itemRepository.delete(item);
+
+            ModelMapper mapper = new ModelMapper();
+            ItemDTO deletedItemDTO = mapper.map(item, ItemDTO.class);
+
+            return deletedItemDTO;
+        }catch (CustomException customException){
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        itemRepository.delete(item);
-
-        ModelMapper mapper = new ModelMapper();
-        ItemDTO deletedItemDTO = mapper.map(item, ItemDTO.class);
-
-        return deletedItemDTO;
     }
 
     @Override
     public List<ItemDTO> findItems(String sellerId, int page, int size) {
-        ModelMapper modelMapper = new ModelMapper();
-        final int DEFAULT_SIZE = 15;
-        final int FIRST_PAGE = 0;
+        try {
+            ModelMapper modelMapper = new ModelMapper();
+            final int DEFAULT_SIZE = 15;
+            final int FIRST_PAGE = 0;
 
-        Pageable pageable = PageRequest.of(
-                Math.max(page, FIRST_PAGE),
-                size > 0 ? size : DEFAULT_SIZE);
+            Pageable pageable = PageRequest.of(
+                    Math.max(page, FIRST_PAGE),
+                    size > 0 ? size : DEFAULT_SIZE);
 
-        Page<ItemEntity> itemsPage = itemRepository.findBySellerId(sellerId, pageable);
+            Page<ItemEntity> itemsPage = itemRepository.findBySellerId(sellerId, pageable);
 
-        Type typeToken = new TypeToken<List<ItemDTO>>() {
-        }.getType();
+            Type typeToken = new TypeToken<List<ItemDTO>>() {
+            }.getType();
 
-        List<ItemDTO> itemsPageDTO = modelMapper.map(itemsPage.getContent(), typeToken);
+            List<ItemDTO> itemsPageDTO = modelMapper.map(itemsPage.getContent(), typeToken);
 
-        return itemsPageDTO;
+            return itemsPageDTO;
+        }catch (CustomException customException){
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
+        }
     }
 
     public ItemDTO findItem(String publicId) {
-        ItemEntity item = findByPublicId(publicId);
+        try {
+            ItemEntity item = findByPublicId(publicId);
 
-        if (item == null) {
-            throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
-                    ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+            if (item == null) {
+                throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
+                        ErrorMessage.NO_DATA_FOUND.getStatusCode().value());
+            }
+
+            ModelMapper modelMapper = new ModelMapper();
+
+            ItemDTO itemDTO = modelMapper.map(item, ItemDTO.class);
+
+            return itemDTO;
+        }catch (CustomException customException){
+            throw customException;
+        }catch (Exception exception){
+            ErrorMessage error = ErrorMessage.DEFAULT_ERROR;
+            throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
-
-        ModelMapper modelMapper = new ModelMapper();
-
-        ItemDTO itemDTO = modelMapper.map(item, ItemDTO.class);
-
-        return itemDTO;
     }
 
 }

@@ -28,9 +28,9 @@ public class ItemController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
-                produces = MediaType.APPLICATION_JSON_VALUE)
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ItemResponseModel createItem(@RequestBody ItemRequestModel itemRequest,
-                                        @PathVariable("sellerId") String sellerId){
+                                        @PathVariable("sellerId") String sellerId) {
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -43,11 +43,11 @@ public class ItemController {
 
             return createdItemResponse;
 
-        }catch (CustomException customException){
+        } catch (CustomException customException) {
             customException.printStackTrace();
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
-        }catch (Exception exception){
+        } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -55,18 +55,22 @@ public class ItemController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public List<ItemResponseModel> getItems(@PathVariable("sellerId") String sellerId,
                                             @RequestParam(name = "page", defaultValue = "1") int page,
-                                            @RequestParam(name = "size", defaultValue = "15") int size){
+                                            @RequestParam(name = "size", defaultValue = "15") int size) {
         try {
             ModelMapper mapper = new ModelMapper();
 
-            List<ItemDTO> itemsPage = itemService.findItems(sellerId, page-1, size);
+            List<ItemDTO> itemsPage = itemService.findItems(sellerId, page - 1, size);
 
-            Type type = new TypeToken<List<ItemResponseModel>>() {}.getType();
+            Type type = new TypeToken<List<ItemResponseModel>>() {
+            }.getType();
 
             List<ItemResponseModel> itemsPageResponse = mapper.map(itemsPage, type);
 
             return itemsPageResponse;
-        }catch (Exception exception){
+        } catch (CustomException customException) {
+            HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
+            throw new ResponseStatusException(code, customException.getMessage());
+        } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -75,8 +79,8 @@ public class ItemController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ItemResponseModel editItem(@RequestBody ItemRequestModel itemRequest,
-                                        @PathVariable("sellerId") String sellerId,
-                                        @PathVariable("itemId") String itemId){
+                                      @PathVariable("sellerId") String sellerId,
+                                      @PathVariable("itemId") String itemId) {
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -89,11 +93,10 @@ public class ItemController {
             ItemResponseModel modifiedItemResponse = mapper.map(editedItem, ItemResponseModel.class);
 
             return modifiedItemResponse;
-
-        }catch (CustomException customException){
+        } catch (CustomException customException) {
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
-        }catch (Exception exception){
+        } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -101,7 +104,7 @@ public class ItemController {
     @DeleteMapping(path = "/{itemId}",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ItemResponseModel deleteItem(@PathVariable("sellerId") String sellerId,
-                                          @PathVariable("itemId") String itemId) {
+                                        @PathVariable("itemId") String itemId) {
         try {
             ModelMapper mapper = new ModelMapper();
 
@@ -114,11 +117,10 @@ public class ItemController {
             ItemResponseModel deletedItemResponse = mapper.map(deletedItemDTO, ItemResponseModel.class);
 
             return deletedItemResponse;
-
-        }catch(CustomException customException){
+        } catch (CustomException customException) {
             HttpStatus code = HttpStatus.valueOf(customException.getStatusCode());
             throw new ResponseStatusException(code, customException.getMessage());
-        }catch (Exception exception){
+        } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

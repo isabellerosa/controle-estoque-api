@@ -4,7 +4,6 @@ import lombok.Data;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,7 +24,6 @@ public class ItemEntity implements Serializable {
     @NotBlank
     private String name;
 
-    @NotNull
     private BigDecimal price;
 
     @NotBlank
