@@ -59,9 +59,7 @@ public class ItemServiceImpl implements ItemService {
             LOGGER.debug("Trying to insert item on database");
             ItemEntity savedItem = itemRepository.save(newItem);
 
-            ItemDTO savedItemDTO = mapper.map(savedItem, ItemDTO.class);
-
-            return savedItemDTO;
+            return mapper.map(savedItem, ItemDTO.class);
         }catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -74,8 +72,8 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private ItemEntity findByPublicId(String publidId) {
-        return itemRepository.findByPublicId(publidId);
+    private ItemEntity findByPublicId(String publicId) {
+        return itemRepository.findByPublicId(publicId);
     }
 
     private ItemEntity findByName(String itemName) {
@@ -107,9 +105,7 @@ public class ItemServiceImpl implements ItemService {
             LOGGER.debug("Updating item on database");
             ItemEntity modifiedItem = itemRepository.save(editedItem);
 
-            ItemDTO modifiedItemDTO = mapper.map(modifiedItem, ItemDTO.class);
-
-            return modifiedItemDTO;
+            return mapper.map(modifiedItem, ItemDTO.class);
         }catch (CustomException customException){
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -138,9 +134,8 @@ public class ItemServiceImpl implements ItemService {
             itemRepository.delete(item);
 
             ModelMapper mapper = new ModelMapper();
-            ItemDTO deletedItemDTO = mapper.map(item, ItemDTO.class);
 
-            return deletedItemDTO;
+            return mapper.map(item, ItemDTO.class);
         }catch (CustomException customException){
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -172,9 +167,7 @@ public class ItemServiceImpl implements ItemService {
             Type typeToken = new TypeToken<List<ItemDTO>>() {
             }.getType();
 
-            List<ItemDTO> itemsPageDTO = modelMapper.map(itemsPage.getContent(), typeToken);
-
-            return itemsPageDTO;
+            return modelMapper.map(itemsPage.getContent(), typeToken);
         }catch (CustomException customException){
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -200,9 +193,7 @@ public class ItemServiceImpl implements ItemService {
 
             ModelMapper modelMapper = new ModelMapper();
 
-            ItemDTO itemDTO = modelMapper.map(item, ItemDTO.class);
-
-            return itemDTO;
+            return modelMapper.map(item, ItemDTO.class);
         }catch (CustomException customException){
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -214,5 +205,4 @@ public class ItemServiceImpl implements ItemService {
             throw new CustomException(error.getMessage(), error.getStatusCode().value());
         }
     }
-
 }

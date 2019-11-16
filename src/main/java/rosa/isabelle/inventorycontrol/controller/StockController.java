@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import rosa.isabelle.inventorycontrol.dto.ItemDTO;
@@ -19,7 +18,7 @@ import rosa.isabelle.inventorycontrol.model.response.StockResponseModel;
 import rosa.isabelle.inventorycontrol.service.StockService;
 
 @RestController
-@RequestMapping("{ownerId}/store/{storeId}/stock")
+@RequestMapping("/user/{ownerId}/store/{storeId}/stock")
 public class StockController {
 
     private StockService stockService;
@@ -31,7 +30,8 @@ public class StockController {
         this.stockService = stockService;
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     StockItemModel createStock(@RequestBody StockRequestModel newStockRequest,
                                @PathVariable("storeId") String storeId) {
         LOGGER.debug("Starting createStock with storeId: {} and itemId: {}", storeId, newStockRequest.getItem());
@@ -51,9 +51,7 @@ public class StockController {
 
             StockItemDTO createdStockItemDTO = stockService.addStockItem(newStockItemDTO);
 
-            StockItemModel createdStockItemResponse = modelMapper.map(createdStockItemDTO, StockItemModel.class);
-
-            return createdStockItemResponse;
+            return modelMapper.map(createdStockItemDTO, StockItemModel.class);
         }catch (CustomException customException){
             LOGGER.error("An exception occurred at createStock with storeId: {} and itemId: {}",
                     storeId, newStockRequest.getItem());
@@ -68,7 +66,7 @@ public class StockController {
         }
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping
     StockResponseModel findStocks(@PathVariable("storeId") String storeId,
                                   @RequestParam(name = "page", defaultValue = "1") int page,
                                   @RequestParam(name = "size", defaultValue = "15") int size) {
@@ -79,9 +77,7 @@ public class StockController {
 
             StockDTO stockPageDTO = stockService.getStock(storeId, page - 1, size);
 
-            StockResponseModel stockPageResponse = mapper.map(stockPageDTO, StockResponseModel.class);
-
-            return stockPageResponse;
+            return mapper.map(stockPageDTO, StockResponseModel.class);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred at findStocks with storeId: {}", storeId);
 
@@ -94,7 +90,7 @@ public class StockController {
         }
     }
 
-    @PutMapping(path = "/{itemId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "/{itemId}")
     StockItemModel updateStock(@RequestBody StockItemModel editedStockItemRequest,
                                @PathVariable("itemId") String itemId,
                                @PathVariable("storeId") String storeId) {
@@ -106,9 +102,7 @@ public class StockController {
 
             StockItemDTO modifiedStockItemDTO = stockService.editStockItem(storeId, itemId, editedStockItemDTO);
 
-            StockItemModel modifiedStockItemResponse = mapper.map(modifiedStockItemDTO, StockItemModel.class);
-
-            return modifiedStockItemResponse;
+            return mapper.map(modifiedStockItemDTO, StockItemModel.class);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred at updateStock with itemId: {} and storeId: {}", itemId, storeId);
 
@@ -121,7 +115,7 @@ public class StockController {
         }
     }
 
-    @DeleteMapping(path = "/{itemId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(path = "/{itemId}")
     StockItemModel deleteStock(@PathVariable("itemId") String itemId, @PathVariable("storeId") String storeId) {
         LOGGER.debug("Starting deleteStock with itemId: {} and storeId: {}", itemId, storeId);
 
@@ -130,9 +124,7 @@ public class StockController {
 
             StockItemDTO deletedStockItemDTO = stockService.removeStockItem(storeId, itemId);
 
-            StockItemModel deletedStockItemResponse = modelMapper.map(deletedStockItemDTO, StockItemModel.class);
-
-            return deletedStockItemResponse;
+            return modelMapper.map(deletedStockItemDTO, StockItemModel.class);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred at deleteStock with itemId: {} and storeId: {}", itemId, storeId);
 

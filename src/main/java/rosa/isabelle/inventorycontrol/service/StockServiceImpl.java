@@ -49,32 +49,30 @@ public class StockServiceImpl implements StockService {
             String storeId = stockDTO.getStore().getPublicId();
             String itemId = stockDTO.getItem().getPublicId();
 
-            StoreEntity storeEntity = findStore(storeId);
-            ItemEntity itemEntity = findItem(itemId);
+            StoreEntity store = findStore(storeId);
+            ItemEntity item = findItem(itemId);
 
-            if (storeEntity == null || itemEntity == null) {
+            if (store == null || item == null) {
                 ErrorMessage error = ErrorMessage.INVALID_ENTRY;
                 throw new CustomException(error.getMessage(), error.getStatusCode().value());
             }
 
-            if (findStockItem(storeEntity, itemEntity) != null) {
+            if (findStockItem(store, item) != null) {
                 throw new CustomException(ErrorMessage.DUPLICATED_DATA.getMessage(),
                         ErrorMessage.DUPLICATED_DATA.getStatusCode().value());
             }
 
             ModelMapper mapper = new ModelMapper();
 
-            StockEntity stockEntity = new StockEntity();
-            stockEntity.setStore(storeEntity);
-            stockEntity.setItem(itemEntity);
-            stockEntity.setQuantity(stockDTO.getQuantity());
+            StockEntity newStockItem = new StockEntity();
+            newStockItem.setStore(store);
+            newStockItem.setItem(item);
+            newStockItem.setQuantity(stockDTO.getQuantity());
 
             LOGGER.debug("Trying to insert stockItem on database");
-            StockEntity savedEntity = stockRepository.save(stockEntity);
+            StockEntity createdStockItem = stockRepository.save(newStockItem);
 
-            StockItemDTO saved = mapper.map(savedEntity, StockItemDTO.class);
-
-            return saved;
+            return mapper.map(createdStockItem, StockItemDTO.class);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -178,9 +176,7 @@ public class StockServiceImpl implements StockService {
             LOGGER.debug("Trying to update stockItem on database");
             StockEntity updatedStockItem = stockRepository.save(editedStockItem);
 
-            StockItemDTO returnStockItem = modelMapper.map(updatedStockItem, StockItemDTO.class);
-
-            return returnStockItem;
+            return modelMapper.map(updatedStockItem, StockItemDTO.class);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -217,9 +213,8 @@ public class StockServiceImpl implements StockService {
             stockRepository.delete(item);
 
             ModelMapper mapper = new ModelMapper();
-            StockItemDTO deletedItem = mapper.map(item, StockItemDTO.class);
 
-            return deletedItem;
+            return mapper.map(item, StockItemDTO.class);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 

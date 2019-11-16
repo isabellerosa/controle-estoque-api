@@ -55,9 +55,7 @@ public class StoreServiceImpl implements StoreService {
 
             LOGGER.debug("Saved store: " + createdStore);
 
-            StoreDTO createdStoreDTO = mapper.map(createdStore, StoreDTO.class);
-
-            return createdStoreDTO;
+            return mapper.map(createdStore, StoreDTO.class);
         }catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -97,9 +95,7 @@ public class StoreServiceImpl implements StoreService {
             LOGGER.debug("Trying to update store on database");
             StoreEntity modifiedStore = storeRepository.save(editedStore);
 
-            StoreDTO modifiedStoreDTO = mapper.map(modifiedStore, StoreDTO.class);
-
-            return modifiedStoreDTO;
+            return mapper.map(modifiedStore, StoreDTO.class);
         }catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -113,11 +109,11 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    public StoreDTO deleteStore(StoreDTO storeDTO) {
-        LOGGER.debug("Starting service deleteStore with publicId: {}", storeDTO.getPublicId());
+    public StoreDTO deleteStore(String publicId) {
+        LOGGER.debug("Starting service deleteStore with publicId: {}", publicId);
 
         try {
-            StoreEntity store = findByPublicId(storeDTO.getPublicId());
+            StoreEntity store = findByPublicId(publicId);
 
             if (store == null)
                 throw new CustomException(ErrorMessage.NO_DATA_FOUND.getMessage(),
@@ -127,9 +123,8 @@ public class StoreServiceImpl implements StoreService {
             storeRepository.delete(store);
 
             ModelMapper mapper = new ModelMapper();
-            StoreDTO deletedStore = mapper.map(store, StoreDTO.class);
 
-            return deletedStore;
+            return mapper.map(store, StoreDTO.class);
         }catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -155,9 +150,7 @@ public class StoreServiceImpl implements StoreService {
             Type typeToken = new TypeToken<List<StoreDTO>>() {
             }.getType();
 
-            List<StoreDTO> storesDTO = modelMapper.map(stores, typeToken);
-
-            return storesDTO;
+            return modelMapper.map(stores, typeToken);
         }catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 
@@ -184,9 +177,7 @@ public class StoreServiceImpl implements StoreService {
 
             ModelMapper mapper = new ModelMapper();
 
-            StoreDTO storeDTO = mapper.map(store, StoreDTO.class);
-
-            return storeDTO;
+            return mapper.map(store, StoreDTO.class);
         }catch (CustomException customException) {
             LOGGER.error("An exception occurred: {}", customException.getMessage());
 

@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import rosa.isabelle.inventorycontrol.dto.ItemDTO;
@@ -19,7 +18,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 @RestController
-@RequestMapping("{sellerId}/item")
+@RequestMapping("/user/{sellerId}/item")
 public class ItemController {
 
     private ItemService itemService;
@@ -31,8 +30,8 @@ public class ItemController {
         this.itemService = itemService;
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ItemResponseModel createItem(@RequestBody ItemRequestModel itemRequest,
                                         @PathVariable("sellerId") String sellerId) {
         LOGGER.debug("Starting createItem with item name: {} and sellerId: {}", itemRequest.getName(), sellerId);
@@ -45,9 +44,7 @@ public class ItemController {
 
             ItemDTO savedItem = itemService.registerItem(requestDTO);
 
-            ItemResponseModel createdItemResponse = mapper.map(savedItem, ItemResponseModel.class);
-
-            return createdItemResponse;
+            return mapper.map(savedItem, ItemResponseModel.class);
 
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred at createItem with item name: {} and sellerId: {}",
@@ -63,7 +60,7 @@ public class ItemController {
         }
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping
     public List<ItemResponseModel> findItems(@PathVariable("sellerId") String sellerId,
                                              @RequestParam(name = "page", defaultValue = "1") int page,
                                              @RequestParam(name = "size", defaultValue = "15") int size) {
@@ -77,9 +74,7 @@ public class ItemController {
             Type type = new TypeToken<List<ItemResponseModel>>() {
             }.getType();
 
-            List<ItemResponseModel> itemsPageResponse = mapper.map(itemsPage, type);
-
-            return itemsPageResponse;
+            return mapper.map(itemsPage, type);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred at findItems with sellerId: {}", sellerId);
 
@@ -92,9 +87,7 @@ public class ItemController {
         }
     }
 
-    @PutMapping(path = "/{itemId}",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "/{itemId}")
     public ItemResponseModel updateItem(@RequestBody ItemRequestModel editedItemRequest,
                                         @PathVariable("sellerId") String sellerId,
                                         @PathVariable("itemId") String itemId) {
@@ -109,9 +102,7 @@ public class ItemController {
 
             ItemDTO editedItem = itemService.editItem(editedItemDTO);
 
-            ItemResponseModel modifiedItemResponse = mapper.map(editedItem, ItemResponseModel.class);
-
-            return modifiedItemResponse;
+            return mapper.map(editedItem, ItemResponseModel.class);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred at updateItem with sellerId: {} and itemId: {}", sellerId, itemId);
 
@@ -124,8 +115,7 @@ public class ItemController {
         }
     }
 
-    @DeleteMapping(path = "/{itemId}",
-            produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(path = "/{itemId}")
     public ItemResponseModel deleteItem(@PathVariable("sellerId") String sellerId,
                                         @PathVariable("itemId") String itemId) {
         LOGGER.debug("Starting deleteItem with sellerId: {} and itemId: {}", sellerId, itemId);
@@ -139,9 +129,7 @@ public class ItemController {
 
             ItemDTO deletedItemDTO = itemService.deleteItem(itemId);
 
-            ItemResponseModel deletedItemResponse = mapper.map(deletedItemDTO, ItemResponseModel.class);
-
-            return deletedItemResponse;
+            return mapper.map(deletedItemDTO, ItemResponseModel.class);
         } catch (CustomException customException) {
             LOGGER.error("An exception occurred at deleteItem with sellerId: {} and itemId: {}", sellerId, itemId);
 
@@ -153,5 +141,4 @@ public class ItemController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
 }
