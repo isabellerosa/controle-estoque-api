@@ -4,28 +4,31 @@
 
 ## Sem enrolação, vai direto para o que te interessa:
 - [Instalação](#Instalação)
-- [Requerimentos](#Requerimentos)
 - [Configuração](#Configuração)
 - [Documentação](#Documentação)
 - [Tarefas](#Tarefas)
 - [Melhorar](#Melhorar)
 
 ---
-## Requerimentos
-- Ter Docker instalado na sua máquina: [URL instalação Docker](https://docs.docker.com/v17.12/install/#prior-releases)
-
-- :exclamation: Caso não tenha docker e não queira instalar pode gerar .jar com mvn install e executar o .jar na VM do Java. 
-
-## Instalação
-
-- O projeto é completamente autocontido! 
+## Instalação 
 - Tem Docker e um Makefile para deixar ainda mais simples configurar.
 
 - Clone este repositório na sua máquina `https://github.com/isabellerosa/desafio-controle-estoque.git`
 
-- E caso já tenha o requerimento (Docker) no seu PC, já está pronto para rodar. 
+- Isso é tudo pessoal.
 
 ## Configuração
+> Apesar de o projeto estar completamente Dockerizado, você pode optar por não utilizar docker :(
+
+> Gere o `.jar`
+```
+$ mvn install -DskipTests
+```
+> Rode o comando usando suas credenciais do banco
+```
+$ java -Dspring.profiles.active=prod -DDB_DRIVER=com.mysql.jdbc.Driver -DDB_URL="jdbc:mysql://dbaddress:port/dbname" -DDB_USER=user -DDB_PASSWORD=password -DDB_DIALECT=org.hibernate.dialect.MySQL5InnoDBDialect -DDB_DDL=update -jar inventory-control-0.0.1-SNAPSHOT.jar
+```
+___
 
 > Caso queira usar um banco na sua máquina, basta editar o arquivo ```inventory.env``` e adicionar os dados de conexão do seu banco local:
 
