@@ -1,0 +1,18 @@
+version: '3'
+services:
+  inventory-control:
+    build: .
+    image: isabellerosa/inventory-control
+    ports:
+      - 8080:8080
+    env_file:
+      - inventory.env
+    depends_on:
+      - inventory-db
+
+  inventory-db:
+    image: mysql:8
+    ports:
+      - 3306:3306
+    env_file:
+      - inventory.env
