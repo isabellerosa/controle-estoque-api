@@ -76,6 +76,20 @@ ACTIVE_PROFILE=dev
 
 - Todos os endpoints e suas respectivas respostas
 
+## Health Check
+
+### Request
+
+`GET /check/health`
+
+### Response
+Status: 200 OK
+
+```json
+{
+    "status": "UP"
+}
+```
 ## Criar Loja
 
 ### Request
@@ -370,6 +384,7 @@ Status: 200 OK
 - [:heavy_check_mark:] Listar itens e listar lojas
 
 ## Melhorar
+- [:heavy_check_mark:] Adicionar Health Check para aplicação
 - [:heavy_check_mark:] Ter profiles para dev e prod para facilitar o desenvolvimento.
 - [:heavy_check_mark:] Adicionar H2 para conseguir usar o ambiente de dev com ainda mais facilidade.
 - [:heavy_check_mark:] Dockerizar completamente a aplicação
